@@ -1,39 +1,41 @@
 # NerdMiner Emulator (Rust)
 
-Emulador desktop do [NerdMiner v2](https://github.com/BitMaker-hub/NerdMiner_v2): um minerador
-**solo** de Bitcoin ("loteria") com a mesma interface da T-Display (320x170), rodando como um
-pequeno "dock" na sua área de trabalho, escondendo na bandeja do sistema e com controle de uso de
-CPU e GPU.
+**English** | [Português (BR)](README.pt-BR.md)
 
-Funciona em **macOS, Linux e Windows**.
+A desktop emulator of [NerdMiner v2](https://github.com/BitMaker-hub/NerdMiner_v2): a **solo**
+Bitcoin "lottery" miner with the same T-Display (320x170) interface. It runs as a small "dock" on
+your desktop, can hide in the system tray, and lets you control how much CPU and GPU it uses.
 
-## Recursos
+Runs on **macOS, Linux and Windows**.
 
-- As 4 telas originais (Miner, Clock, Global Stats e BTC Price) com os bitmaps, fontes e
-  coordenadas do firmware original. Clique na tela para trocar (como o botão do aparelho) e arraste para mover.
-- Stratum v1 (public-pool.io, solo.ckpool.org ou qualquer pool solo), com `mining.suggest_difficulty`.
-- **Seleção do dispositivo de mineração: CPU, GPU ou CPU + GPU**, cada um com seu próprio limite
-  de uso, ajustável ao vivo sem reiniciar:
-  - **CPU**: nº de threads + % de uso por thread (duty cycle). Usa as instruções SHA do
-    processador quando existem (ARMv8 / SHA-NI).
-  - **GPU**: % de uso (duty cycle) de um compute shader WGSL (wgpu → Metal / Vulkan / DX12).
-    A GPU vem **desligada** por padrão e só é usada se for selecionada.
-- Bandeja do sistema: mostrar/ocultar, pausar/retomar, sair. No macOS o hashrate aparece na barra de menus.
-- Janela sem bordas, opção "sempre no topo", zoom 1x–2.5x, iniciar escondido.
-- Logotipo Go BTC discreto no canto superior esquerdo; clicar abre https://gobtc.com.br.
-- Dados de rede (preço, altura, hashrate global, taxas, halving) do mempool.space.
+## Features
 
-> Mineração solo com CPU/GPU é uma loteria: a chance de achar um bloco é minúscula.
-> O objetivo é diversão e aprendizado, igual ao NerdMiner físico.
+- The 4 original screens (Miner, Clock, Global Stats and BTC Price), using the bitmaps, fonts and
+  coordinates from the original firmware. Click the screen to switch (like the device button);
+  drag to move the window.
+- Stratum v1 (public-pool.io, solo.ckpool.org or any solo pool), with `mining.suggest_difficulty`.
+- **Mining device selection: CPU, GPU or CPU + GPU**, each with its own usage limit, adjustable
+  live without restarting:
+  - **CPU**: number of threads + % usage per thread (duty cycle). Uses the processor's SHA
+    instructions when available (ARMv8 / SHA-NI).
+  - **GPU**: % usage (duty cycle) of a WGSL compute shader (wgpu → Metal / Vulkan / DX12).
+    The GPU is **off** by default and only used when selected.
+- System tray: show/hide, pause/resume, quit. On macOS the hashrate is shown in the menu bar.
+- Borderless window, "always on top" option, 1x–2.5x zoom, start hidden.
+- Discreet Go BTC logo in the top-left corner; clicking it opens https://gobtc.com.br.
+- Network data (price, block height, global hashrate, fees, halving) from mempool.space.
 
-## Consumo de recursos
+> Solo mining with a CPU/GPU is a lottery: the chance of finding a block is tiny.
+> The goal is fun and learning, just like the physical NerdMiner.
 
-Medido em um MacBook Air M1 (8 núcleos), build `--release`, minerando contra uma pool local.
-CPU do processo no formato do `top` (100% = 1 núcleo inteiro; 800% = a máquina toda).
+## Resource usage
 
-| Seleção | CPU do processo | % da CPU total | Memória (phys_footprint) |
+Measured on a MacBook Air M1 (8 cores), `--release` build, mining against a local pool.
+Process CPU is shown the way `top` reports it (100% = one full core; 800% = the whole machine).
+
+| Selection | Process CPU | % of total CPU | Memory (phys_footprint) |
 |---|---:|---:|---:|
-| CPU, 4 threads @ 50% (padrão) | ~180% | ~22% | ~40 MB |
+| CPU, 4 threads @ 50% (default) | ~180% | ~22% | ~40 MB |
 | CPU, 4 threads @ 100% | ~393% | ~49% | ~41 MB |
 | CPU, 8 threads @ 25% | ~150% | ~19% | ~40 MB |
 | CPU, 1 thread @ 10% | ~9% | ~1% | ~40 MB |
@@ -41,97 +43,113 @@ CPU do processo no formato do `top` (100% = 1 núcleo inteiro; 800% = a máquina
 | GPU @ 100% | ~5% | <1% | ~42 MB |
 | CPU 4 @ 50% + GPU @ 30% | ~179% | ~22% | ~43 MB |
 
-- **Memória**: fica entre ~28 e ~45 MB e se mantém estável ao longo do tempo (sem crescimento).
-  A interface (egui) e as 5 telas em textura respondem pela maior parte; o minerador em si usa
-  poucos KB por thread. Com a GPU ativa somam-se ~10 MB de buffers/driver.
-- **CPU**: o uso segue `threads × % por thread`. Com a GPU selecionada sozinha, a CPU fica quase
-  ociosa (só coordena e verifica candidatos).
-- **GPU**: o % controla quanto tempo a GPU fica ocupada (cada dispatch dura ~30 ms, seguido de uma
-  pausa proporcional), então a interface do sistema continua fluida.
-- Hashrate de referência no M1: ~6,5 MH/s por thread de CPU a 100% (4 threads ≈ 26 MH/s) e ~53 MH/s na GPU a 100%.
+- **Memory**: stays between ~28 and ~45 MB and is stable over time (no growth). The UI (egui)
+  and the 5 screen textures account for most of it; the miner itself uses a few KB per thread.
+  With the GPU enabled, add ~10 MB of buffers/driver.
+- **CPU**: usage follows `threads × % per thread`. With only the GPU selected, the CPU stays
+  almost idle (it just coordinates and verifies candidates).
+- **GPU**: the % controls how long the GPU is kept busy (each dispatch takes ~30 ms, followed by a
+  proportional pause), so the desktop stays responsive.
+- Reference hashrate on the M1: ~6.5 MH/s per CPU thread at 100% (4 threads ≈ 26 MH/s) and
+  ~53 MH/s on the GPU at 100%.
 
-## Instalar
+## Install
 
-Baixe o instalador da sua plataforma na página **Releases** do GitHub:
+Download the installer for your platform from the
+[Releases](https://github.com/tnarnold/nerdminer-emu/releases) page:
 
-- **macOS** (Apple Silicon e Intel): `NerdMiner-Emulator-<versão>-macos-universal.dmg`. Abra o
-  `.dmg` e arraste **NerdMiner Emulator** para **Aplicativos**. Como o app não é notarizado pela
-  Apple, na primeira vez clique com o botão direito no app → **Abrir** → **Abrir** (ou rode
+- **macOS** (Apple Silicon and Intel): `NerdMiner-Emulator-<version>-macos-universal.dmg`. Open the
+  `.dmg` and drag **NerdMiner Emulator** into **Applications**. The app is not notarized by Apple,
+  so the first time right-click the app → **Open** → **Open** (or run
   `xattr -dr com.apple.quarantine "/Applications/NerdMiner Emulator.app"`).
-- **Windows**: `...-windows-x86_64.zip`, extraia e rode `nerdminer-emu.exe`.
-- **Linux**: `...-linux-x86_64.tar.gz`, extraia e rode `./nerdminer-emu`.
+- **Windows**: `...-windows-x86_64.zip`, extract it and run `nerdminer-emu.exe`.
+- **Linux**: `...-linux-x86_64.tar.gz`, extract it and run `./nerdminer-emu`.
 
-### Gerar o .dmg localmente
+### Build the .dmg locally
 
 ```sh
-scripts/package-macos.sh   # -> dist/NerdMiner-Emulator-<versão>-macos-universal.dmg
+scripts/package-macos.sh   # -> dist/NerdMiner-Emulator-<version>-macos-universal.dmg
 ```
 
-Com uma conta Apple Developer dá para assinar e notarizar definindo `MACOS_SIGN_IDENTITY` e
-`MACOS_NOTARY_PROFILE` (veja o início do script).
+With an Apple Developer account you can sign and notarize it by setting `MACOS_SIGN_IDENTITY`
+and `MACOS_NOTARY_PROFILE` (see the top of the script).
 
-### Publicar uma versão
+### Publish a release
 
 ```sh
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-O workflow `release` gera o `.dmg`, o `.zip` e o `.tar.gz` e cria o Release automaticamente.
+The `release` workflow builds the `.dmg`, `.zip` and `.tar.gz` and creates the GitHub Release.
 
-## Compilar e rodar
+## Build and run
 
-Requer Rust estável (https://rustup.rs).
+Requires stable Rust (https://rustup.rs).
 
 ```sh
 cargo run --release
 ```
 
-### Dependências no Linux
+### Linux dependencies
 
 ```sh
 sudo apt install libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxrandr-dev \
   libxi-dev libgl1-mesa-dev libvulkan-dev libdbus-1-dev pkg-config
 ```
 
-A bandeja no Linux usa StatusNotifierItem (D-Bus, crate `ksni`). Em GNOME é preciso a extensão
-"AppIndicator and KStatusNotifierItem Support"; KDE, XFCE, Cinnamon etc. já suportam.
+The Linux tray uses StatusNotifierItem (D-Bus, `ksni` crate). GNOME needs the
+"AppIndicator and KStatusNotifierItem Support" extension; KDE, XFCE, Cinnamon etc. support it
+out of the box.
 
-## Configuração
+## Configuration
 
-Na primeira execução o painel ⚙ abre: informe seu **endereço BTC** e clique em
-*Salvar e reconectar*. A configuração fica em:
+On first launch the ⚙ panel opens: enter your **BTC address** and click
+*Salvar e reconectar* (save and reconnect). The configuration is stored at:
 
 - macOS: `~/Library/Application Support/nerdminer-emu/config.json`
 - Linux: `~/.config/nerdminer-emu/config.json`
 - Windows: `%APPDATA%\nerdminer-emu\config.json`
 
-Variáveis úteis para desenvolvimento:
+Useful environment variables for development:
 
-- `NERDMINER_CONFIG=/caminho/config.json`: usa outro arquivo de configuração.
-- `NERDMINER_SHOTS=/diretório`: salva capturas (RGBA bruto) de cada tela e encerra.
+- `NERDMINER_CONFIG=/path/config.json`: use a different configuration file.
+- `NERDMINER_SHOTS=/directory`: save raw RGBA screenshots of every screen, then exit.
 
-## Testes
+### The pool doesn't connect
+
+The miner only makes **outbound** connections to the pool (like a web browser), so it **does not
+need UPnP or port forwarding**. If the dot next to the wifi icon on the Miner screen stays red,
+your network is probably blocking the outbound port. Check with:
+
+```sh
+nc -vz public-pool.io 21496     # solo.ckpool.org uses port 3333
+```
+
+If it times out, allow outbound TCP on that port in your firewall, or try another network (e.g. a
+phone hotspot). The detailed reason is shown in the log inside the ⚙ panel.
+
+## Tests
 
 ```sh
 cargo test --release -- --nocapture
 ```
 
-Inclui o hash do bloco gênese (caminho com midstate) e um teste de GPU que precisa encontrar o
-nonce real do bloco gênese.
+Includes the genesis block hash (midstate path) and a GPU test that must find the real genesis
+block nonce.
 
-## Estrutura
+## Project layout
 
-| Arquivo | Função |
+| File | Purpose |
 |---|---|
-| `src/work.rs` | header do bloco, coinbase/merkle, SHA-256d com midstate, dificuldade |
-| `src/stratum.rs` | cliente Stratum v1 |
-| `src/miner.rs` | threads de CPU com limite de uso, cálculo de hashrate |
-| `src/gpu.rs`, `src/sha256d.wgsl` | minerador GPU (wgpu) |
-| `src/screens.rs` | telas do NerdMiner (bitmaps, fontes, coordenadas) |
-| `src/app.rs` | janela, barra de ferramentas e configurações |
-| `src/tray.rs` | bandeja do sistema |
-| `src/netinfo.rs` | dados da rede via mempool.space |
+| `src/work.rs` | block header, coinbase/merkle, SHA-256d with midstate, difficulty |
+| `src/stratum.rs` | Stratum v1 client |
+| `src/miner.rs` | CPU threads with usage limit, hashrate calculation |
+| `src/gpu.rs`, `src/sha256d.wgsl` | GPU miner (wgpu) |
+| `src/screens.rs` | NerdMiner screens (bitmaps, fonts, coordinates) |
+| `src/app.rs` | window, toolbar and settings |
+| `src/tray.rs` | system tray |
+| `src/netinfo.rs` | network data from mempool.space |
 
-## Créditos
+## Credits
 
-Interface baseada no NerdMiner v2 (© 2023 Bitmaker, MIT). Veja `assets/CREDITS.md`.
+UI based on NerdMiner v2 (© 2023 Bitmaker, MIT). See `assets/CREDITS.md`.
