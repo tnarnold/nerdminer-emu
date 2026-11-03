@@ -17,7 +17,10 @@ use std::time::{Duration, Instant};
 pub const SCREEN: Vec2 = Vec2::new(320.0, 170.0);
 const BEZEL: f32 = 12.0;
 const TOOLBAR_H: f32 = 34.0;
-pub const COMPACT: Vec2 = Vec2::new(SCREEN.x + BEZEL * 2.0, SCREEN.y + BEZEL * 2.0 + TOOLBAR_H);
+const HEADER_H: f32 = 24.0;
+const LOGO: f32 = 16.0;
+const BRAND_URL: &str = "https://gobtc.com.br";
+pub const COMPACT: Vec2 = Vec2::new(SCREEN.x + BEZEL * 2.0, SCREEN.y + BEZEL * 2.0 + TOOLBAR_H + HEADER_H);
 const SETTINGS_H: f32 = 430.0;
 
 
@@ -29,6 +32,7 @@ pub struct NerdApp {
     screen: Screen,
     screens: Option<Screens>,
     zoom: f32,
+    logo: Option<egui::TextureHandle>,
     shot_done: Option<usize>,
     settings_open: bool,
     draft: Config,
@@ -59,6 +63,7 @@ impl NerdApp {
             tray_rx,
             screen: Screen::Miner,
             screens: None,
+            logo: None,
             shot_done: None,
             zoom: cfg.zoom.clamp(1.0, 3.0),
             settings_open: cfg.btc_address.trim().is_empty(),
@@ -205,6 +210,32 @@ impl NerdApp {
         });
     }
 
+    /// Top strip: discreet brand logo (top-left, aligned with the screen) + window drag area.
+    fn draw_header(&mut self, ui: &mut egui::Ui) {
+        let width = ui.available_width();
+        let (bar, bar_resp) = ui.allocate_exact_size(Vec2::new(width, HEADER_H), Sense::click_and_drag());
+        if bar_resp.drag_started() {
+            ui.ctx().send_viewport_cmd(ViewportCommand::StartDrag);
+        }
+        let logo = self.logo.get_or_insert_with(|| load_logo(ui.ctx()));
+        let rect = Rect::from_min_size(
+            egui::pos2(bar.left() + BEZEL, bar.center().y - LOGO / 2.0 + 2.0),
+            Vec2::splat(LOGO),
+        );
+        let resp = ui.interact(rect, ui.scope_id().with("brand_logo"), Sense::click());
+        let alpha = if resp.hovered() { 1.0 } else { 0.55 };
+        ui.painter().image(
+            logo.id(),
+            rect,
+            Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+            Color32::WHITE.gamma_multiply(alpha),
+        );
+        if resp.clicked() {
+            ui.ctx().open_url(egui::OpenUrl::new_tab(BRAND_URL));
+        }
+        resp.on_hover_cursor(egui::CursorIcon::PointingHand).on_hover_text("gobtc.com.br");
+    }
+
     fn next_screen(&mut self, dir: i32) {
         let all = Screen::ALL;
         let i = all.iter().position(|s| *s == self.screen).unwrap() as i32;
@@ -213,7 +244,7 @@ impl NerdApp {
 
     fn window_size(&self) -> Vec2 {
         let w = SCREEN.x * self.zoom + BEZEL * 2.0;
-        let h = SCREEN.y * self.zoom + BEZEL * 2.0 + TOOLBAR_H;
+        let h = SCREEN.y * self.zoom + BEZEL * 2.0 + TOOLBAR_H + HEADER_H;
         Vec2::new(w.max(COMPACT.x), if self.settings_open { h + SETTINGS_H } else { h })
     }
 
@@ -373,6 +404,7 @@ impl eframe::App for NerdApp {
             ui.spacing_mut().item_spacing = Vec2::new(4.0, 4.0);
             ui.set_min_size(ui.available_size());
             self.debug_shots(ui.ctx());
+            self.draw_header(ui);
             self.draw_device(ui);
             self.toolbar(ui);
             if self.settings_open {
@@ -380,4 +412,13 @@ impl eframe::App for NerdApp {
             }
         });
     }
+}
+
+fn load_logo(ctx: &egui::Context) -> egui::TextureHandle {
+    let img = image::load_from_memory(include_bytes!("../assets/brand/gobtc-64.png"))
+        .expect("embedded logo")
+        .to_rgba8();
+    let size = [img.width() as usize, img.height() as usize];
+    let color = egui::ColorImage::from_rgba_unmultiplied(size, img.as_raw());
+    ctx.load_texture("gobtc-logo", color, egui::TextureOptions::LINEAR)
 }

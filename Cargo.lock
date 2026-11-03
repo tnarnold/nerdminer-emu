@@ -2129,6 +2129,7 @@ dependencies = [
  "dirs",
  "eframe",
  "hex",
+ "image",
  "pollster",
  "serde",
  "serde_json",

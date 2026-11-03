@@ -20,6 +20,7 @@ Funciona em **macOS, Linux e Windows**.
     A GPU vem **desligada** por padrão e só é usada se for selecionada.
 - Bandeja do sistema: mostrar/ocultar, pausar/retomar, sair. No macOS o hashrate aparece na barra de menus.
 - Janela sem bordas, opção "sempre no topo", zoom 1x–2.5x, iniciar escondido.
+- Logotipo Go BTC discreto no canto superior esquerdo; clicar abre https://gobtc.com.br.
 - Dados de rede (preço, altura, hashrate global, taxas, halving) do mempool.space.
 
 > Mineração solo com CPU/GPU é uma loteria: a chance de achar um bloco é minúscula.
