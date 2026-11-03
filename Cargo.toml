@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "Emulador desktop do NerdMiner (minerador solo de Bitcoin) com bandeja e controle de CPU/GPU"
 license = "MIT"
+repository = "https://github.com/tnarnold/nerdminer-emu"
 
 [dependencies]
 bytemuck = "1.25.2"

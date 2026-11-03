@@ -12,7 +12,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 APP_NAME="NerdMiner Emulator"
 BIN="nerdminer-emu"
-BUNDLE_ID="com.github.nerdminer-emu"
+BUNDLE_ID="io.github.tnarnold.nerdminer-emu"
 VERSION="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
 DIST="dist"
 APP="$DIST/$APP_NAME.app"
