@@ -47,7 +47,7 @@ CPU do processo no formato do `top` (100% = 1 núcleo inteiro; 800% = a máquina
   ociosa (só coordena e verifica candidatos).
 - **GPU**: o % controla quanto tempo a GPU fica ocupada (cada dispatch dura ~30 ms, seguido de uma
   pausa proporcional), então a interface do sistema continua fluida.
-- Hashrate de referência no M1: ~25 MH/s por núcleo de CPU a 100% e ~53 MH/s na GPU a 100%.
+- Hashrate de referência no M1: ~6,5 MH/s por thread de CPU a 100% (4 threads ≈ 26 MH/s) e ~53 MH/s na GPU a 100%.
 
 ## Compilar e rodar
 
