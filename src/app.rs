@@ -291,21 +291,35 @@ impl NerdApp {
             });
 
             ui.separator();
-            ui.heading("CPU");
+            ui.heading("Mineração");
             let mut changed = false;
-            changed |= ui.checkbox(&mut self.draft.cpu_enabled, "Minerar com CPU").changed();
-            changed |= ui
-                .add(egui::Slider::new(&mut self.draft.cpu_threads, 1..=max_threads()).text("threads"))
-                .changed();
-            changed |= ui.add(egui::Slider::new(&mut self.draft.cpu_usage, 1..=100).text("% uso por thread")).changed();
-            let est = self.draft.cpu_threads as f64 * self.draft.cpu_usage as f64 / max_threads() as f64;
-            ui.weak(format!("≈ {est:.0}% da CPU total ({} núcleos lógicos)", max_threads()));
+            ui.horizontal(|ui| {
+                ui.label("Dispositivo");
+                let (c, g) = (self.draft.cpu_enabled, self.draft.gpu_enabled);
+                for (label, cpu, gpu) in [("CPU", true, false), ("GPU", false, true), ("CPU + GPU", true, true)] {
+                    if ui.selectable_label(c == cpu && g == gpu, label).clicked() {
+                        self.draft.cpu_enabled = cpu;
+                        self.draft.gpu_enabled = gpu;
+                        changed = true;
+                    }
+                }
+            });
 
-            ui.separator();
-            ui.heading("GPU");
-            changed |= ui.checkbox(&mut self.draft.gpu_enabled, "Minerar com GPU").changed();
-            changed |= ui.add(egui::Slider::new(&mut self.draft.gpu_usage, 1..=100).text("% uso da GPU")).changed();
-            ui.weak(format!("Status: {}", self.shared.gpu_status.lock().unwrap()));
+            ui.add_enabled_ui(self.draft.cpu_enabled, |ui| {
+                ui.label(egui::RichText::new("CPU").strong());
+                changed |= ui
+                    .add(egui::Slider::new(&mut self.draft.cpu_threads, 1..=max_threads()).text("threads"))
+                    .changed();
+                changed |= ui.add(egui::Slider::new(&mut self.draft.cpu_usage, 1..=100).text("% uso por thread")).changed();
+                let est = self.draft.cpu_threads as f64 * self.draft.cpu_usage as f64 / max_threads() as f64;
+                ui.weak(format!("≈ {est:.0}% da CPU total ({} núcleos lógicos)", max_threads()));
+            });
+
+            ui.add_enabled_ui(self.draft.gpu_enabled, |ui| {
+                ui.label(egui::RichText::new("GPU").strong());
+                changed |= ui.add(egui::Slider::new(&mut self.draft.gpu_usage, 1..=100).text("% uso da GPU")).changed();
+                ui.weak(format!("Status: {}", self.shared.gpu_status.lock().unwrap()));
+            });
 
             ui.separator();
             ui.heading("Janela");

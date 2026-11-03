@@ -12,15 +12,42 @@ Funciona em **macOS, Linux e Windows**.
 - As 4 telas originais (Miner, Clock, Global Stats e BTC Price) com os bitmaps, fontes e
   coordenadas do firmware original. Clique na tela para trocar (como o botão do aparelho) e arraste para mover.
 - Stratum v1 (public-pool.io, solo.ckpool.org ou qualquer pool solo), com `mining.suggest_difficulty`.
-- Mineração em **CPU** com nº de threads e % de uso por thread ajustáveis ao vivo (duty cycle);
-  usa as instruções SHA do processador quando existem (ARMv8 / SHA-NI).
-- Mineração em **GPU** via compute shader WGSL (wgpu → Metal / Vulkan / DX12) com % de uso ajustável.
+- **Seleção do dispositivo de mineração: CPU, GPU ou CPU + GPU**, cada um com seu próprio limite
+  de uso, ajustável ao vivo sem reiniciar:
+  - **CPU**: nº de threads + % de uso por thread (duty cycle). Usa as instruções SHA do
+    processador quando existem (ARMv8 / SHA-NI).
+  - **GPU**: % de uso (duty cycle) de um compute shader WGSL (wgpu → Metal / Vulkan / DX12).
+    A GPU vem **desligada** por padrão e só é usada se for selecionada.
 - Bandeja do sistema: mostrar/ocultar, pausar/retomar, sair. No macOS o hashrate aparece na barra de menus.
 - Janela sem bordas, opção "sempre no topo", zoom 1x–2.5x, iniciar escondido.
 - Dados de rede (preço, altura, hashrate global, taxas, halving) do mempool.space.
 
 > Mineração solo com CPU/GPU é uma loteria: a chance de achar um bloco é minúscula.
 > O objetivo é diversão e aprendizado, igual ao NerdMiner físico.
+
+## Consumo de recursos
+
+Medido em um MacBook Air M1 (8 núcleos), build `--release`, minerando contra uma pool local.
+CPU do processo no formato do `top` (100% = 1 núcleo inteiro; 800% = a máquina toda).
+
+| Seleção | CPU do processo | % da CPU total | Memória (phys_footprint) |
+|---|---:|---:|---:|
+| CPU, 4 threads @ 50% (padrão) | ~180% | ~22% | ~40 MB |
+| CPU, 4 threads @ 100% | ~393% | ~49% | ~41 MB |
+| CPU, 8 threads @ 25% | ~150% | ~19% | ~40 MB |
+| CPU, 1 thread @ 10% | ~9% | ~1% | ~40 MB |
+| GPU @ 30% | ~2% | <1% | ~41 MB |
+| GPU @ 100% | ~5% | <1% | ~42 MB |
+| CPU 4 @ 50% + GPU @ 30% | ~179% | ~22% | ~43 MB |
+
+- **Memória**: fica entre ~28 e ~45 MB e se mantém estável ao longo do tempo (sem crescimento).
+  A interface (egui) e as 5 telas em textura respondem pela maior parte; o minerador em si usa
+  poucos KB por thread. Com a GPU ativa somam-se ~10 MB de buffers/driver.
+- **CPU**: o uso segue `threads × % por thread`. Com a GPU selecionada sozinha, a CPU fica quase
+  ociosa (só coordena e verifica candidatos).
+- **GPU**: o % controla quanto tempo a GPU fica ocupada (cada dispatch dura ~30 ms, seguido de uma
+  pausa proporcional), então a interface do sistema continua fluida.
+- Hashrate de referência no M1: ~25 MH/s por núcleo de CPU a 100% e ~53 MH/s na GPU a 100%.
 
 ## Compilar e rodar
 
