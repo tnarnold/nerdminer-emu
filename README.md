@@ -50,6 +50,34 @@ CPU do processo no formato do `top` (100% = 1 núcleo inteiro; 800% = a máquina
   pausa proporcional), então a interface do sistema continua fluida.
 - Hashrate de referência no M1: ~6,5 MH/s por thread de CPU a 100% (4 threads ≈ 26 MH/s) e ~53 MH/s na GPU a 100%.
 
+## Instalar
+
+Baixe o instalador da sua plataforma na página **Releases** do GitHub:
+
+- **macOS** (Apple Silicon e Intel): `NerdMiner-Emulator-<versão>-macos-universal.dmg`. Abra o
+  `.dmg` e arraste **NerdMiner Emulator** para **Aplicativos**. Como o app não é notarizado pela
+  Apple, na primeira vez clique com o botão direito no app → **Abrir** → **Abrir** (ou rode
+  `xattr -dr com.apple.quarantine "/Applications/NerdMiner Emulator.app"`).
+- **Windows**: `...-windows-x86_64.zip`, extraia e rode `nerdminer-emu.exe`.
+- **Linux**: `...-linux-x86_64.tar.gz`, extraia e rode `./nerdminer-emu`.
+
+### Gerar o .dmg localmente
+
+```sh
+scripts/package-macos.sh   # -> dist/NerdMiner-Emulator-<versão>-macos-universal.dmg
+```
+
+Com uma conta Apple Developer dá para assinar e notarizar definindo `MACOS_SIGN_IDENTITY` e
+`MACOS_NOTARY_PROFILE` (veja o início do script).
+
+### Publicar uma versão
+
+```sh
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+O workflow `release` gera o `.dmg`, o `.zip` e o `.tar.gz` e cria o Release automaticamente.
+
 ## Compilar e rodar
 
 Requer Rust estável (https://rustup.rs).
