@@ -1,0 +1,40 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: nerdminer-emu-linux-x86_64
+            bin: nerdminer-emu
+          - os: windows-latest
+            artifact: nerdminer-emu-windows-x86_64
+            bin: nerdminer-emu.exe
+          - os: macos-latest
+            artifact: nerdminer-emu-macos-arm64
+            bin: nerdminer-emu
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libgl1-mesa-dev libvulkan-dev libdbus-1-dev pkg-config
+      - name: Test (CPU hashing / header)
+        run: cargo test --release -- --skip gpu
+      - name: Build
+        run: cargo build --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: target/release/${{ matrix.bin }}
