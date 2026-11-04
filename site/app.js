@@ -106,6 +106,7 @@
       if (r[3].status === "fulfilled") net.brl = parseFloat(r[3].value.data.amount) || null;
       renderTicker();
       renderCalc();
+      renderStatus();
     });
   }
 
@@ -206,8 +207,102 @@
     })
     .catch(function () {});
 
-  function renderAll() { renderTicker(); renderCalc(); renderReleases(); }
+
+  /* ---------- tray menu preview (same logic as src/netinfo.rs + src/tray.rs) ---------- */
+  var st = null;
+  var BR = function (v, d) { return v.toLocaleString("pt-BR", { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); };
+  function brBig(n) {
+    var u = [[1e12, "tri"], [1e9, "bi"], [1e6, "mi"], [1e3, "mil"]];
+    for (var i = 0; i < u.length; i++) if (n >= u[i][0]) { var v = n / u[i][0]; return BR(v, v < 100 && v % 1 > 0.05 ? 1 : 0) + " " + u[i][1]; }
+    return BR(n);
+  }
+  function feerate(f) { return (f >= 10 || Math.abs(f - Math.round(f)) < 0.05) ? BR(Math.round(f)) : BR(f, f < 1 ? 2 : 1); }
+  function dur(sec) {
+    sec = Math.max(0, sec);
+    if (sec < 60) return Math.round(sec) + " s";
+    if (sec < 3600) return Math.floor(sec / 60) + " min";
+    if (sec < 172800) { var m = Math.floor(sec / 60); return Math.floor(m / 60) + " h " + ("0" + m % 60).slice(-2); }
+    if (sec < 86400 * 730) return BR(sec / 86400, 1).replace(",0", "") + " dias";
+    return brBig(sec / 31557600) + " anos";
+  }
+  function odds(p) { return p >= 0.01 ? BR(p * 100, 1) + "%" : "1 em " + brBig(1 / p); }
+  var LEVELS = [
+    { dot: "🟢", name: "Livre", color: "#34c759", tier: 3, why: "rede livre, não pague mais" },
+    { dot: "🟡", name: "Moderada", color: "#ffcc00", tier: 1, why: "deve confirmar em ~30 min" },
+    { dot: "🟠", name: "Congestionada", color: "#ff9500", tier: 2, why: "taxa baixa pode demorar horas" },
+    { dot: "🔴", name: "Muito congestionada", color: "#ff3b30", tier: 2, why: "rede cheia: envie só se for urgente" }
+  ];
+  function level(blocks) { return blocks <= 1 ? 0 : blocks <= 6 ? 1 : blocks <= 36 ? 2 : 3; }
+  function barFrac(b) {
+    var seg = function (x, lo, hi) { return Math.min(1, Math.max(0, (x - lo) / (hi - lo))); };
+    return b <= 1 ? 0.25 * seg(b, 0, 1) : b <= 6 ? 0.25 + 0.25 * seg(b, 1, 6) : b <= 36 ? 0.5 + 0.25 * seg(b, 6, 36) : 0.75 + 0.25 * seg(b, 36, 216);
+  }
+  function money(btc) {
+    var brl = isPt() && net.brl;
+    var p = brl ? net.brl : net.usd;
+    if (!p) return "";
+    return " ≈ " + (brl ? "R$ " : "US$ ") + BR(btc * p, 2);
+  }
+  function loadStatus() {
+    var B = "https://mempool.space/api";
+    Promise.allSettled([
+      getJSON(B + "/mempool"), getJSON(B + "/v1/fees/recommended"), getJSON(B + "/v1/fees/mempool-blocks"),
+      getJSON(B + "/v1/blocks"), getJSON(B + "/v1/difficulty-adjustment")
+    ]).then(function (r) {
+      var v = function (i) { return r[i].status === "fulfilled" ? r[i].value : null; };
+      if (!v(0) || !v(1)) return;
+      st = { m: v(0), f: v(1), mb: v(2), blocks: v(3), adj: v(4) };
+      renderStatus();
+    });
+  }
+  function renderStatus() {
+    var $ = function (id) { return document.getElementById(id); };
+    var clock = new Date();
+    $("mb-clock").textContent = clock.toLocaleTimeString(isPt() ? "pt-BR" : "en-US", { hour: "2-digit", minute: "2-digit" });
+    if (!st) return;
+    var f = st.f, m = st.m, minFee = f.minimumFee || 1;
+    var backlog = (m.fee_histogram || []).reduce(function (a, e) { return e[0] >= minFee ? a + e[1] : a; }, 0);
+    var blocks = backlog / 1e6, lv = LEVELS[level(blocks)];
+    var tiers = [f.fastestFee, f.halfHourFee, f.hourFee, f.economyFee];
+    var rec = tiers[lv.tier];
+    $("mb-title").textContent = "82.4 MH/s · ⛽" + lv.dot + " " + feerate(rec) + " sat/vB";
+    $("m-level").textContent = lv.dot + " " + lv.name;
+    $("m-bar").style.width = (barFrac(blocks) * 100).toFixed(1) + "%";
+    $("m-bar").style.background = lv.color;
+    $("m-queue").textContent = BR(blocks, blocks < 10 ? 2 : 0) + (blocks <= 1 ? " bloco" : " blocos") + " · ~" + dur(Math.max(1, Math.ceil(blocks)) * 600) + " para limpar";
+    var cheap = m.vsize - backlog;
+    $("m-mempool").textContent = brBig(m.count) + " tx · " + BR(m.vsize / 1e6, 1) + " vMB" + (cheap > m.vsize * 0.5 ? " (maioria abaixo de " + feerate(minFee) + " sat/vB)" : "");
+    if (st.mb && st.mb[0]) {
+      var nb = st.mb[0], fr = nb.feeRange;
+      $("m-next").textContent = feerate(fr[0]) + " – " + feerate(fr[fr.length - 1]) + " sat/vB · mediana " + feerate(nb.medianFee) + " · " + brBig(nb.nTx) + " tx";
+    }
+    tiers.forEach(function (t, i) {
+      var sats = Math.round(t * 141);
+      $("m-f" + i).textContent = feerate(t) + " sat/vB · " + BR(sats) + " sats" + money(sats / 1e8);
+    });
+    $("m-rec").textContent = "✅ Recomendado: " + feerate(rec) + " sat/vB — " + lv.why;
+    if (st.blocks && st.blocks[0]) {
+      var b = st.blocks[0], pool = (b.extras && b.extras.pool && b.extras.pool.name) || "?";
+      $("m-block").textContent = "#" + BR(b.height) + " · " + pool + " · há " + dur(Date.now() / 1000 - b.timestamp);
+    }
+    if (st.adj) {
+      var a = st.adj;
+      $("m-adj").textContent = BR(a.progressPercent) + "% · " + (a.difficultyChange >= 0 ? "+" : "−") + BR(Math.abs(a.difficultyChange), 2) + "% em ~" + dur(a.remainingTime / 1000);
+    }
+    var brl = isPt() && net.brl;
+    if (net.usd || net.brl) $("m-price").textContent = brl ? "R$ " + BR(net.brl) : "US$ " + BR(net.usd);
+    var per = net.diff * 4294967296, H = 8.24e7;
+    $("m-chance").textContent = odds(-Math.expm1(-H * 86400 / per)) + " · bloco a cada ~" + dur(per / H);
+    document.querySelectorAll(".levels tr[data-level]").forEach(function (tr) {
+      tr.classList.toggle("now", +tr.getAttribute("data-level") === level(blocks));
+    });
+  }
+
+  function renderAll() { renderTicker(); renderCalc(); renderReleases(); renderStatus(); }
   setLang(root.lang);
   loadNet();
   setInterval(loadNet, 60000);
+  loadStatus();
+  setInterval(loadStatus, 30000);
+  setInterval(renderStatus, 15000);
 })();

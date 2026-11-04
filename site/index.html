@@ -46,6 +46,7 @@
     <nav class="nav-links">
       <a href="#lottery"><span data-l="en">Lottery mining</span><span data-l="pt">Loteria</span></a>
       <a href="#features"><span data-l="en">Features</span><span data-l="pt">Recursos</span></a>
+      <a href="#status">Status</a>
       <a href="#download">Download</a>
       <a href="#setup"><span data-l="en">Setup</span><span data-l="pt">Configurar</span></a>
       <a href="#faq">FAQ</a>
@@ -216,7 +217,7 @@
         <p><span data-l="en">Threads and % per thread for the CPU, % for the GPU. Change them live, without restarting. Your laptop stays quiet.</span><span data-l="pt">Threads e % por thread na CPU, % na GPU. Mude ao vivo, sem reiniciar. O notebook continua silencioso.</span></p></div>
       <div class="feature reveal"><iconify-icon icon="solar:widget-5-bold-duotone"></iconify-icon>
         <h3><span data-l="en">Lives in the tray</span><span data-l="pt">Mora na bandeja</span></h3>
-        <p><span data-l="en">Borderless widget, always-on-top option, zoom 1×–2.5×. Hide it to the system tray; on macOS the hashrate shows in the menu bar.</span><span data-l="pt">Widget sem bordas, opção sempre-no-topo, zoom de 1× a 2,5×. Esconda na bandeja; no macOS o hashrate aparece na barra de menus.</span></p></div>
+        <p><span data-l="en">Borderless widget, always-on-top option, zoom 1×–2.5×. Hides to the tray, which works as a mini dashboard with network occupancy and the fee to pay now.</span><span data-l="pt">Widget sem bordas, opção sempre-no-topo, zoom de 1× a 2,5×. Esconde na bandeja, que vira um mini painel com a ocupação da rede e a taxa para pagar agora.</span></p></div>
       <div class="feature reveal"><iconify-icon icon="solar:server-square-bold-duotone"></iconify-icon>
         <h3><span data-l="en">Any solo pool</span><span data-l="pt">Qualquer pool solo</span></h3>
         <p><span data-l="en">Stratum v1 with suggested difficulty. Presets for public-pool.io and solo.ckpool.org, or type your own pool.</span><span data-l="pt">Stratum v1 com dificuldade sugerida. Atalhos para public-pool.io e solo.ckpool.org, ou use a sua própria pool.</span></p></div>
@@ -248,11 +249,104 @@
   </div>
 </section>
 
+<!-- ================= STATUS (tray) ================= -->
+<section id="status" class="rule">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="label"><span class="idx">04</span> <span data-l="en">New in v0.2 · Menu bar status</span><span data-l="pt">Novo na v0.2 · Status na barra de menus</span></span>
+      <h2 class="display"><span data-l="en">The network,<br>at a <span class="slash">glance</span></span><span data-l="pt">A rede num<br><span class="slash">relance</span></span></h2>
+      <p class="lead">
+        <span data-l="en">Inspired by iStat Menus and mempool.space: the tray icon became a tiny dashboard. Mining status, how busy the Bitcoin network is and the fee you should pay right now, without opening anything.</span>
+        <span data-l="pt">Inspirado no iStat Menus e no mempool.space: o ícone da bandeja virou um mini painel. Status da mineração, o quanto a rede Bitcoin está ocupada e a taxa que você deve pagar agora, sem abrir nada.</span>
+      </p>
+    </div>
+
+    <div class="split status-split">
+      <div class="prose reveal">
+        <ol class="steps">
+          <li><div><b data-l="en">Status dot on the icon</b><b data-l="pt">Bolinha de estado no ícone</b>
+            <span data-l="en">🟢 mining · 🟡 connecting · 🔴 no pool · ⚪ paused. You know it's working without looking at the widget.</span>
+            <span data-l="pt">🟢 minerando · 🟡 conectando · 🔴 sem pool · ⚪ pausado. Você sabe que está funcionando sem olhar o widget.</span></div></li>
+          <li><div><b data-l="en">Your fields in the menu bar</b><b data-l="pt">Seus campos na barra de menus</b>
+            <span data-l="en">Pick what shows next to the icon on macOS: hashrate, recommended fee, minutes since the last block, best difficulty, BTC price. On Windows and Linux the same summary is in the tooltip.</span>
+            <span data-l="pt">Escolha o que aparece ao lado do ícone no macOS: hashrate, taxa recomendada, minutos desde o último bloco, melhor dificuldade, preço do BTC. No Windows e no Linux o mesmo resumo fica na dica do ícone.</span></div></li>
+          <li><div><b data-l="en">Real network occupancy</b><b data-l="pt">Ocupação real da rede</b>
+            <span data-l="en">The raw mempool size is misleading: most of it can be transactions paying less than the minimum fee. The app counts only the queue that actually competes for space, in blocks.</span>
+            <span data-l="pt">O tamanho bruto do mempool engana: boa parte pode ser de transações pagando menos que a taxa mínima. O app conta só a fila que realmente disputa espaço, em blocos.</span></div></li>
+          <li><div><b data-l="en">The fee to pay now, and what it costs</b><b data-l="pt">A taxa para pagar agora, e quanto custa</b>
+            <span data-l="en">Four tiers like mempool.space, the cost in sats and in your currency (8 to choose from) for a simple, Taproot or consolidation transaction, and a clear recommendation.</span>
+            <span data-l="pt">Quatro níveis como no mempool.space, o custo em sats e na sua moeda (8 opções) para uma transação simples, Taproot ou de consolidação, e uma recomendação clara.</span></div></li>
+        </ol>
+
+        <div class="table-wrap levels">
+          <table>
+            <thead><tr>
+              <th><span data-l="en">Occupancy</span><span data-l="pt">Ocupação</span></th>
+              <th><span data-l="en">Paying queue</span><span data-l="pt">Fila pagante</span></th>
+              <th><span data-l="en">Recommendation</span><span data-l="pt">Recomendação</span></th>
+            </tr></thead>
+            <tbody>
+              <tr data-level="0"><td>🟢 <span data-l="en">Free</span><span data-l="pt">Livre</span></td><td>≤ 1 <span data-l="en">block</span><span data-l="pt">bloco</span></td><td><span data-l="en">"No rush" fee, paying more doesn't help</span><span data-l="pt">Taxa "sem pressa": pagar mais não adianta</span></td></tr>
+              <tr data-level="1"><td>🟡 <span data-l="en">Moderate</span><span data-l="pt">Moderada</span></td><td>1–6 <span data-l="en">blocks</span><span data-l="pt">blocos</span></td><td><span data-l="en">~30 min fee</span><span data-l="pt">Taxa de ~30 min</span></td></tr>
+              <tr data-level="2"><td>🟠 <span data-l="en">Congested</span><span data-l="pt">Congestionada</span></td><td>6–36 <span data-l="en">blocks</span><span data-l="pt">blocos</span></td><td><span data-l="en">~1 h fee; low fees may take hours</span><span data-l="pt">Taxa de ~1 h; taxa baixa pode demorar horas</span></td></tr>
+              <tr data-level="3"><td>🔴 <span data-l="en">Severe</span><span data-l="pt">Muito congestionada</span></td><td>&gt; 36 <span data-l="en">blocks</span><span data-l="pt">blocos</span></td><td><span data-l="en">Send only if urgent</span><span data-l="pt">Envie só se for urgente</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <div class="mac">
+          <div class="mac-bar">
+            <span class="mac-apple"><iconify-icon icon="mdi:apple"></iconify-icon></span>
+            <span class="mac-spacer"></span>
+            <span class="mac-item on"><span class="tray-ico"><img src="img/icon.png" alt="" width="16" height="16"><i></i></span><span id="mb-title">82.4 MH/s · ⛽ …</span></span>
+            <span class="mac-item muted"><iconify-icon icon="mdi:wifi"></iconify-icon></span>
+            <span class="mac-item muted" id="mb-clock">--:--</span>
+          </div>
+          <div class="mac-menu" aria-label="Tray menu preview">
+            <div class="mrow strong">● Minerando — public-pool.io · 3 h 12</div>
+            <div class="mrow"><b>Hashrate</b><span>82.4 MH/s (CPU 26.1 · GPU 56.3)</span></div>
+            <div class="mrow"><b>Chance hoje</b><span id="m-chance">—</span></div>
+            <div class="msep"></div>
+            <div class="mrow"><b>Bloco</b><span id="m-block">—</span></div>
+            <div class="mrow"><b>Ajuste de dificuldade</b><span id="m-adj">—</span></div>
+            <div class="mrow"><b>BTC</b><span id="m-price">—</span></div>
+            <div class="msep"></div>
+            <div class="mrow strong"><b>REDE BITCOIN</b><span id="m-level">carregando…</span></div>
+            <div class="mrow"><b>Fila pagante</b><span><span class="mbar"><i id="m-bar"></i></span> <span id="m-queue">—</span></span></div>
+            <div class="mrow"><b>Mempool</b><span id="m-mempool">—</span></div>
+            <div class="mrow"><b>Próximo bloco</b><span id="m-next">—</span></div>
+            <div class="mrow strong small">TAXA PARA ENVIAR AGORA <span class="dim">(Simples 1→2, SegWit · 141 vB)</span></div>
+            <div class="mrow fee"><b>🚀 Próximo bloco (~10 min)</b><span id="m-f0">—</span></div>
+            <div class="mrow fee"><b>⏱ ~30 min</b><span id="m-f1">—</span></div>
+            <div class="mrow fee"><b>🕐 ~1 hora</b><span id="m-f2">—</span></div>
+            <div class="mrow fee"><b>🐢 Sem pressa</b><span id="m-f3">—</span></div>
+            <div class="mrow rec" id="m-rec">✅ Recomendado: —</div>
+            <div class="msep"></div>
+            <div class="mrow sub">Dispositivo<span>▸</span></div>
+            <div class="mrow sub">Uso da CPU / GPU<span>▸</span></div>
+            <div class="mrow sub">Tamanho da transação · Moeda<span>▸</span></div>
+            <div class="mrow sub">Barra de menus mostra<span>▸</span></div>
+            <div class="msep"></div>
+            <div class="mrow">Pausar mineração · Ver na pool… · Ver no mempool.space…</div>
+          </div>
+        </div>
+        <p class="mac-note">
+          <span class="live-dot"></span>
+          <span data-l="en">Live: network rows use mempool.space data right now, with the app's own logic. Mining rows are an example. The app's menu is in Portuguese.</span>
+          <span data-l="pt">Ao vivo: as linhas da rede usam os dados do mempool.space agora, com a mesma lógica do app. As linhas de mineração são um exemplo.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ================= DOWNLOAD ================= -->
 <section id="download" class="rule">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="label"><span class="idx">04</span> Download</span>
+      <span class="label"><span class="idx">05</span> Download</span>
       <h2 class="display"><span data-l="en">Get your<br><span class="slash">ticket</span></span><span data-l="pt">Pegue seu<br><span class="slash">bilhete</span></span></h2>
       <p class="lead">
         <span data-l="en">Free and open source (MIT). Latest release: </span><span data-l="pt">Livre e open source (MIT). Versão mais recente: </span><b class="js-version-full">v0.1.0</b>
@@ -305,7 +399,7 @@ cargo run --release</pre>
 <section id="setup" class="rule">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="label"><span class="idx">05</span> <span data-l="en">Setup</span><span data-l="pt">Configuração</span></span>
+      <span class="label"><span class="idx">06</span> <span data-l="en">Setup</span><span data-l="pt">Configuração</span></span>
       <h2 class="display"><span data-l="en">Mining in<br>2 <span class="slash">minutes</span></span><span data-l="pt">Minerando em<br>2 <span class="slash">minutos</span></span></h2>
     </div>
 
@@ -360,7 +454,7 @@ cargo run --release</pre>
 <section id="faq" class="rule">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="label"><span class="idx">06</span> FAQ</span>
+      <span class="label"><span class="idx">07</span> FAQ</span>
       <h2 class="display"><span data-l="en">Honest <span class="slash">answers</span></span><span data-l="pt">Respostas <span class="slash">honestas</span></span></h2>
     </div>
     <div class="faq reveal">
