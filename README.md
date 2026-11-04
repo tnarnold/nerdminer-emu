@@ -8,7 +8,7 @@ your desktop, can hide in the system tray, and lets you control how much CPU and
 
 Runs on **macOS, Linux and Windows**.
 
-📖 **[User manual](docs/MANUAL.md)**: setup, every screen and setting, how it works, troubleshooting.
+🌐 **[Website](https://tnarnold.github.io/nerdminer-emu/)** · 📖 **[User manual](docs/MANUAL.md)**: setup, every screen and setting, how it works, troubleshooting.
 
 ## Features
 

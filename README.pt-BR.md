@@ -9,7 +9,7 @@ CPU e GPU.
 
 Funciona em **macOS, Linux e Windows**.
 
-📖 **[Manual do usuário](docs/MANUAL.pt-BR.md)**: configuração, cada tela e opção, como funciona e solução de problemas.
+🌐 **[Site](https://tnarnold.github.io/nerdminer-emu/)** · 📖 **[Manual do usuário](docs/MANUAL.pt-BR.md)**: configuração, cada tela e opção, como funciona e solução de problemas.
 
 ## Recursos
 

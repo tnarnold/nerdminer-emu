@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NerdMiner Emulator — solo Bitcoin lottery miner for your desktop</title>
+<meta name="description" content="A desktop emulator of NerdMiner v2: a solo Bitcoin lottery miner with the original T-Display interface. macOS, Windows and Linux. Choose CPU, GPU or both and cap how much they use.">
+<meta name="theme-color" content="#050505">
+<meta property="og:type" content="website">
+<meta property="og:title" content="NerdMiner Emulator — solo Bitcoin lottery miner">
+<meta property="og:description" content="The NerdMiner v2 interface on your desktop. Solo mining, CPU/GPU limits, system tray. macOS · Windows · Linux.">
+<meta property="og:image" content="https://tnarnold.github.io/nerdminer-emu/img/og.jpg">
+<meta property="og:url" content="https://tnarnold.github.io/nerdminer-emu/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="img/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>
+  (function () {
+    var l = null;
+    try { l = localStorage.getItem("lang"); } catch (e) {}
+    if (!l) l = /^pt/i.test(navigator.language || "") ? "pt-BR" : "en";
+    document.documentElement.lang = l;
+  })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@2.1.0/dist/iconify-icon.min.js"></script>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="img/icon.png" alt="" width="28" height="28">NerdMiner<span class="slash">/</span>EMU</a>
+    <nav class="nav-links">
+      <a href="#lottery"><span data-l="en">Lottery mining</span><span data-l="pt">Loteria</span></a>
+      <a href="#features"><span data-l="en">Features</span><span data-l="pt">Recursos</span></a>
+      <a href="#download">Download</a>
+      <a href="#setup"><span data-l="en">Setup</span><span data-l="pt">Configurar</span></a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-set-lang="en">EN</button>
+      <button type="button" data-set-lang="pt-BR">PT</button>
+    </div>
+    <a class="gh" href="https://github.com/tnarnold/nerdminer-emu" aria-label="GitHub"><iconify-icon icon="mdi:github"></iconify-icon></a>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="top">
+  <div class="hero-bg" aria-hidden="true"></div>
+  <div class="wrap">
+    <span class="label"><span class="idx">v<span class="js-version">0.1</span></span> · macOS · Windows · Linux</span>
+    <h1 class="display">NerdMiner<span class="slash">/</span><br>EMU</h1>
+    <div class="tag">
+      <span data-l="en">One hash. One ticket. One block.</span>
+      <span data-l="pt">Um hash. Um bilhete. Um bloco.</span>
+    </div>
+    <p class="lead">
+      <span data-l="en">The NerdMiner v2 lottery miner, pixel for pixel, as a tiny widget on your desktop. Solo-mine Bitcoin with your CPU, your GPU or both, set exactly how much they can use, and hide it in the tray.</span>
+      <span data-l="pt">O minerador-loteria NerdMiner v2, pixel por pixel, como um widget na sua área de trabalho. Minere Bitcoin solo com CPU, GPU ou os dois, defina quanto cada um pode usar e esconda na bandeja.</span>
+    </p>
+    <div class="cta">
+      <a class="btn primary js-hero-dl" href="#download"><iconify-icon icon="solar:download-minimalistic-bold"></iconify-icon><span class="js-hero-dl-text"><span data-l="en">Download</span><span data-l="pt">Baixar</span></span></a>
+      <a class="btn" href="#lottery"><span data-l="en">How the lottery works</span><span data-l="pt">Como funciona a loteria</span></a>
+    </div>
+    <div class="os-hint js-os-hint"></div>
+
+    <div class="ticker" aria-live="polite">
+      <div><div class="k"><span class="live-dot"></span><span data-l="en">Block height</span><span data-l="pt">Altura do bloco</span></div><div class="v" id="t-height">—</div></div>
+      <div><div class="k"><span data-l="en">Network hashrate</span><span data-l="pt">Hashrate da rede</span></div><div class="v" id="t-hash">—</div></div>
+      <div><div class="k"><span data-l="en">Difficulty</span><span data-l="pt">Dificuldade</span></div><div class="v" id="t-diff">—</div></div>
+      <div><div class="k"><span data-l="en">BTC price</span><span data-l="pt">Preço do BTC</span></div><div class="v" id="t-price">—</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCREENS ================= -->
+<section id="screens" class="rule">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="label"><span class="idx">01</span> <span data-l="en">The original interface</span><span data-l="pt">A interface original</span></span>
+      <h2 class="display">320<span class="slash">×</span>170 <span data-l="en">pixels of hope</span><span data-l="pt">pixels de esperança</span></h2>
+      <p class="lead">
+        <span data-l="en">Same bitmaps, same fonts, same coordinates as the NerdMiner v2 firmware. Click the screen to cycle through it, just like the button on the real board.</span>
+        <span data-l="pt">Os mesmos bitmaps, fontes e coordenadas do firmware NerdMiner v2. Clique na tela para alternar, como no botão da placa de verdade.</span>
+      </p>
+    </div>
+    <div class="screens">
+      <figure class="screen-card reveal" style="margin:0">
+        <img src="img/screen-miner.png" alt="Miner screen" width="688" height="504" loading="lazy">
+        <div class="cap"><span>Miner</span><span>01</span></div>
+        <p><span data-l="en">Hashrate, shares, best difficulty, valid blocks and pool status.</span><span data-l="pt">Hashrate, shares, melhor dificuldade, blocos válidos e status da pool.</span></p>
+      </figure>
+      <figure class="screen-card reveal" style="margin:0">
+        <img src="img/screen-clock.png" alt="Clock screen" width="688" height="504" loading="lazy">
+        <div class="cap"><span>Clock</span><span>02</span></div>
+        <p><span data-l="en">Local time, block height and BTC price at a glance.</span><span data-l="pt">Hora local, altura do bloco e preço do BTC.</span></p>
+      </figure>
+      <figure class="screen-card reveal" style="margin:0">
+        <img src="img/screen-global.png" alt="Global stats screen" width="688" height="504" loading="lazy">
+        <div class="cap"><span>Global</span><span>03</span></div>
+        <p><span data-l="en">Network hashrate, difficulty, fees and blocks to the halving.</span><span data-l="pt">Hashrate da rede, dificuldade, taxas e blocos até o halving.</span></p>
+      </figure>
+      <figure class="screen-card reveal" style="margin:0">
+        <img src="img/screen-price.png" alt="BTC price screen" width="688" height="504" loading="lazy">
+        <div class="cap"><span>Price</span><span>04</span></div>
+        <p><span data-l="en">Big BTC price ticker with the current block.</span><span data-l="pt">Preço do BTC em destaque com o bloco atual.</span></p>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LOTTERY ================= -->
+<section id="lottery" class="lottery">
+  <div class="lottery-bg" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="split">
+      <div class="prose reveal">
+        <span class="label"><span class="idx">02</span> <span data-l="en">What is lottery mining?</span><span data-l="pt">O que é mineração-loteria?</span></span>
+        <h2 class="display"><span data-l="en">Billions of<br>tickets.<br>One <span class="slash">winner</span>.</span><span data-l="pt">Bilhões de<br>bilhetes.<br>Um <span class="slash">vencedor</span>.</span></h2>
+
+        <div data-l="en">
+          <p>About every ten minutes, a new Bitcoin block is created. Whoever creates it collects the <strong>block reward: 3.125 BTC plus all the transaction fees</strong> in that block.</p>
+          <p>To create a block, a miner must find a block header whose double SHA-256 hash is <strong>below a target</strong> set by the network. There is no shortcut and no skill: you change a number (the <em>nonce</em>), hash, check, and repeat. Every hash is an independent lottery ticket.</p>
+          <p>Big mining farms buy billions of tickets per second and split the prize inside a pool. <strong>Lottery mining</strong> is the opposite: you play <strong>solo</strong>, with a tiny machine. Your odds are astronomically small, but if your ticket ever wins, <strong>the whole reward goes straight to your Bitcoin address</strong>. Solo miners with small devices have won full blocks more than once.</p>
+          <p>It is not an investment. It's a hobby: you learn how Bitcoin works by watching it happen, and you hold a real ticket to a real draw every ten minutes.</p>
+        </div>
+        <div data-l="pt">
+          <p>Mais ou menos a cada dez minutos nasce um novo bloco de Bitcoin. Quem cria esse bloco leva a <strong>recompensa: 3,125 BTC mais todas as taxas das transações</strong> dentro dele.</p>
+          <p>Para criar um bloco, o minerador precisa achar um cabeçalho cujo hash SHA-256 duplo fique <strong>abaixo de um alvo</strong> definido pela rede. Não existe atalho nem habilidade: você muda um número (o <em>nonce</em>), calcula o hash, confere e repete. Cada hash é um bilhete de loteria independente.</p>
+          <p>As grandes fazendas de mineração compram bilhões de bilhetes por segundo e dividem o prêmio numa pool. A <strong>mineração-loteria</strong> é o contrário: você joga <strong>sozinho (solo)</strong>, com uma máquina pequena. A chance é astronomicamente baixa, mas se o seu bilhete ganhar, <strong>a recompensa inteira vai direto para o seu endereço Bitcoin</strong>. Mineradores solo com aparelhos pequenos já ganharam blocos inteiros mais de uma vez.</p>
+          <p>Não é investimento. É hobby: você aprende como o Bitcoin funciona vendo acontecer, e tem um bilhete de verdade num sorteio de verdade a cada dez minutos.</p>
+        </div>
+
+        <ol class="steps">
+          <li><div><b data-l="en">The pool sends a job</b><b data-l="pt">A pool envia um trabalho</b>
+            <span data-l="en">A solo pool (like public-pool.io) gives you a block template that already pays your address.</span>
+            <span data-l="pt">Uma pool solo (como a public-pool.io) entrega um modelo de bloco que já paga o seu endereço.</span></div></li>
+          <li><div><b data-l="en">Your machine hashes</b><b data-l="pt">Sua máquina calcula hashes</b>
+            <span data-l="en">CPU threads and/or the GPU try millions of nonces per second, within the limits you set.</span>
+            <span data-l="pt">As threads da CPU e/ou a GPU testam milhões de nonces por segundo, dentro dos limites que você definir.</span></div></li>
+          <li><div><b data-l="en">Shares prove the work</b><b data-l="pt">Shares provam o trabalho</b>
+            <span data-l="en">Hashes that are "good enough" are sent as shares. They don't pay anything in solo mode, but show you are playing.</span>
+            <span data-l="pt">Hashes "bons o bastante" viram shares. No modo solo não pagam nada, mas mostram que você está jogando.</span></div></li>
+          <li><div><b data-l="en">One hash below the target wins</b><b data-l="pt">Um hash abaixo do alvo ganha</b>
+            <span data-l="en">If a share also beats the network target, it's a valid block. The pool broadcasts it and the reward is yours.</span>
+            <span data-l="pt">Se uma share também bater o alvo da rede, é um bloco válido. A pool transmite e a recompensa é sua.</span></div></li>
+        </ol>
+      </div>
+
+      <aside class="calc reveal" id="calc">
+        <span class="corner tl"></span><span class="corner br"></span>
+        <span class="label"><span class="live-dot"></span> <span data-l="en">Live odds</span><span data-l="pt">Chances ao vivo</span></span>
+        <h3><span data-l="en">What are my odds?</span><span data-l="pt">Qual a minha chance?</span></h3>
+        <p class="sub"><span data-l="en">Uses the current network difficulty from mempool.space.</span><span data-l="pt">Usa a dificuldade atual da rede, via mempool.space.</span></p>
+
+        <div class="presets" id="presets">
+          <button type="button" data-h="5e4">NerdMiner ESP32 · 50 kH/s</button>
+          <button type="button" data-h="2.6e7">CPU · 26 MH/s</button>
+          <button type="button" data-h="8e7" class="on">CPU+GPU · 80 MH/s</button>
+          <button type="button" data-h="1e9">GPU · 1 GH/s</button>
+          <button type="button" data-h="2e14">ASIC · 200 TH/s</button>
+        </div>
+        <div class="field">
+          <label for="h-range"><span>Hashrate</span><output id="h-out">80 MH/s</output></label>
+          <input type="range" id="h-range" min="3" max="15" step="0.01" value="7.903">
+        </div>
+
+        <div class="results">
+          <div><div class="k"><span data-l="en">Avg. time to a block</span><span data-l="pt">Tempo médio p/ um bloco</span></div><div class="v hot" id="r-time">—</div></div>
+          <div><div class="k"><span data-l="en">Chance per day</span><span data-l="pt">Chance por dia</span></div><div class="v" id="r-day">—</div></div>
+          <div><div class="k"><span data-l="en">Chance per year</span><span data-l="pt">Chance por ano</span></div><div class="v" id="r-year">—</div></div>
+          <div><div class="k"><span data-l="en">Prize if you win</span><span data-l="pt">Prêmio se ganhar</span></div><div class="v" id="r-prize">3.125 BTC</div></div>
+        </div>
+        <p class="note">
+          <span data-l="en">Expected hashes per block = difficulty × 2³². Every hash is independent, so you can win on the very first try, or never. Fees not included in the prize estimate.</span>
+          <span data-l="pt">Hashes esperados por bloco = dificuldade × 2³². Cada hash é independente: dá para ganhar na primeira tentativa, ou nunca. Taxas não incluídas na estimativa do prêmio.</span>
+        </p>
+      </aside>
+    </div>
+
+    <div class="compare reveal">
+      <div><div class="big">≈ 6.5 MH/s</div><p><span data-l="en">per CPU thread on an Apple M1, about 130× a real NerdMiner board.</span><span data-l="pt">por thread de CPU num Apple M1, cerca de 130× uma placa NerdMiner real.</span></p></div>
+      <div><div class="big">0 BTC</div><p><span data-l="en">sent to anyone else. No account, no private key, no custody: the template pays your address directly.</span><span data-l="pt">enviado a mais ninguém. Sem conta, sem chave privada, sem custódia: o bloco paga o seu endereço direto.</span></p></div>
+      <div><div class="big">∞ fun</div><p><span data-l="en">Watch your best difficulty climb, learn Stratum and SHA-256d, and keep a ticket in every draw.</span><span data-l="pt">Veja sua melhor dificuldade subir, aprenda Stratum e SHA-256d e tenha um bilhete em todo sorteio.</span></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section id="features" class="rule">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="label"><span class="idx">03</span> <span data-l="en">Features</span><span data-l="pt">Recursos</span></span>
+      <h2 class="display"><span data-l="en">Small widget.<br>Full <span class="slash">control</span>.</span><span data-l="pt">Widget pequeno.<br>Controle <span class="slash">total</span>.</span></h2>
+    </div>
+    <div class="features">
+      <div class="feature reveal"><iconify-icon icon="solar:cpu-bold-duotone"></iconify-icon>
+        <h3><span data-l="en">CPU, GPU or both</span><span data-l="pt">CPU, GPU ou os dois</span></h3>
+        <p><span data-l="en">Pick the device. CPU uses SHA instructions (ARMv8 / SHA-NI); GPU runs a WGSL compute shader on Metal, Vulkan or DX12.</span><span data-l="pt">Escolha o dispositivo. A CPU usa instruções SHA (ARMv8 / SHA-NI); a GPU roda um shader WGSL em Metal, Vulkan ou DX12.</span></p></div>
+      <div class="feature reveal"><iconify-icon icon="solar:tuning-2-bold-duotone"></iconify-icon>
+        <h3><span data-l="en">Hard usage limits</span><span data-l="pt">Limite de uso real</span></h3>
+        <p><span data-l="en">Threads and % per thread for the CPU, % for the GPU. Change them live, without restarting. Your laptop stays quiet.</span><span data-l="pt">Threads e % por thread na CPU, % na GPU. Mude ao vivo, sem reiniciar. O notebook continua silencioso.</span></p></div>
+      <div class="feature reveal"><iconify-icon icon="solar:widget-5-bold-duotone"></iconify-icon>
+        <h3><span data-l="en">Lives in the tray</span><span data-l="pt">Mora na bandeja</span></h3>
+        <p><span data-l="en">Borderless widget, always-on-top option, zoom 1×–2.5×. Hide it to the system tray; on macOS the hashrate shows in the menu bar.</span><span data-l="pt">Widget sem bordas, opção sempre-no-topo, zoom de 1× a 2,5×. Esconda na bandeja; no macOS o hashrate aparece na barra de menus.</span></p></div>
+      <div class="feature reveal"><iconify-icon icon="solar:server-square-bold-duotone"></iconify-icon>
+        <h3><span data-l="en">Any solo pool</span><span data-l="pt">Qualquer pool solo</span></h3>
+        <p><span data-l="en">Stratum v1 with suggested difficulty. Presets for public-pool.io and solo.ckpool.org, or type your own pool.</span><span data-l="pt">Stratum v1 com dificuldade sugerida. Atalhos para public-pool.io e solo.ckpool.org, ou use a sua própria pool.</span></p></div>
+      <div class="feature reveal"><iconify-icon icon="solar:chart-2-bold-duotone"></iconify-icon>
+        <h3><span data-l="en">Live network data</span><span data-l="pt">Dados da rede ao vivo</span></h3>
+        <p><span data-l="en">Price, block height, global hashrate, fees and halving countdown from mempool.space.</span><span data-l="pt">Preço, altura do bloco, hashrate global, taxas e contagem para o halving, via mempool.space.</span></p></div>
+      <div class="feature reveal"><iconify-icon icon="solar:leaf-bold-duotone"></iconify-icon>
+        <h3><span data-l="en">~40 MB of RAM</span><span data-l="pt">~40 MB de RAM</span></h3>
+        <p><span data-l="en">Native Rust, single binary, no runtime. Memory stays flat over days of mining.</span><span data-l="pt">Rust nativo, binário único, sem runtime. A memória fica estável depois de dias minerando.</span></p></div>
+    </div>
+
+    <div class="table-wrap reveal">
+      <table>
+        <thead><tr>
+          <th><span data-l="en">Selection (MacBook Air M1)</span><span data-l="pt">Seleção (MacBook Air M1)</span></th>
+          <th class="n"><span data-l="en">Process CPU</span><span data-l="pt">CPU do processo</span></th>
+          <th class="n"><span data-l="en">% of machine</span><span data-l="pt">% da máquina</span></th>
+          <th class="n"><span data-l="en">Memory</span><span data-l="pt">Memória</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span data-l="en">CPU, 4 threads @ 50% (default)</span><span data-l="pt">CPU, 4 threads @ 50% (padrão)</span></td><td class="n">~180%</td><td class="n"><span class="bar" style="width:22px"></span>~22%</td><td class="n">~40 MB</td></tr>
+          <tr><td>CPU, 4 threads @ 100%</td><td class="n">~393%</td><td class="n"><span class="bar" style="width:49px"></span>~49%</td><td class="n">~41 MB</td></tr>
+          <tr><td>CPU, 1 thread @ 10%</td><td class="n">~9%</td><td class="n"><span class="bar" style="width:2px"></span>~1%</td><td class="n">~40 MB</td></tr>
+          <tr><td><span data-l="en">GPU only @ 30%</span><span data-l="pt">Só GPU @ 30%</span></td><td class="n">~2%</td><td class="n"><span class="bar" style="width:1px"></span>&lt;1%</td><td class="n">~41 MB</td></tr>
+          <tr><td>CPU 4 @ 50% + GPU @ 30%</td><td class="n">~179%</td><td class="n"><span class="bar" style="width:22px"></span>~22%</td><td class="n">~43 MB</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DOWNLOAD ================= -->
+<section id="download" class="rule">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="label"><span class="idx">04</span> Download</span>
+      <h2 class="display"><span data-l="en">Get your<br><span class="slash">ticket</span></span><span data-l="pt">Pegue seu<br><span class="slash">bilhete</span></span></h2>
+      <p class="lead">
+        <span data-l="en">Free and open source (MIT). Latest release: </span><span data-l="pt">Livre e open source (MIT). Versão mais recente: </span><b class="js-version-full">v0.1.0</b>
+      </p>
+    </div>
+
+    <div class="downloads">
+      <div class="dl reveal" data-os="mac">
+        <span class="badge"><span data-l="en">Your system</span><span data-l="pt">Seu sistema</span></span>
+        <iconify-icon class="os" icon="mdi:apple"></iconify-icon>
+        <h3>macOS</h3>
+        <div class="meta">Apple Silicon + Intel · macOS 11+ · .dmg</div>
+        <div class="file js-file">NerdMiner-Emulator-…-macos-universal.dmg</div>
+        <a class="btn primary js-link" href="https://github.com/tnarnold/nerdminer-emu/releases/latest"><iconify-icon icon="solar:download-minimalistic-bold"></iconify-icon><span data-l="en">Download</span><span data-l="pt">Baixar</span></a>
+      </div>
+      <div class="dl reveal" data-os="win">
+        <span class="badge"><span data-l="en">Your system</span><span data-l="pt">Seu sistema</span></span>
+        <iconify-icon class="os" icon="mdi:microsoft-windows"></iconify-icon>
+        <h3>Windows</h3>
+        <div class="meta">x86_64 · Windows 10/11 · .zip</div>
+        <div class="file js-file">NerdMiner-Emulator-…-windows-x86_64.zip</div>
+        <a class="btn primary js-link" href="https://github.com/tnarnold/nerdminer-emu/releases/latest"><iconify-icon icon="solar:download-minimalistic-bold"></iconify-icon><span data-l="en">Download</span><span data-l="pt">Baixar</span></a>
+      </div>
+      <div class="dl reveal" data-os="linux">
+        <span class="badge"><span data-l="en">Your system</span><span data-l="pt">Seu sistema</span></span>
+        <iconify-icon class="os" icon="mdi:linux"></iconify-icon>
+        <h3>Linux</h3>
+        <div class="meta">x86_64 · X11 / Wayland · .tar.gz</div>
+        <div class="file js-file">NerdMiner-Emulator-…-linux-x86_64.tar.gz</div>
+        <a class="btn primary js-link" href="https://github.com/tnarnold/nerdminer-emu/releases/latest"><iconify-icon icon="solar:download-minimalistic-bold"></iconify-icon><span data-l="en">Download</span><span data-l="pt">Baixar</span></a>
+      </div>
+    </div>
+
+    <details class="versions reveal" id="versions">
+      <summary><span data-l="en">All versions</span><span data-l="pt">Todas as versões</span></summary>
+      <div id="ver-list"><div class="ver"><a href="https://github.com/tnarnold/nerdminer-emu/releases">github.com/tnarnold/nerdminer-emu/releases</a></div></div>
+    </details>
+
+    <p class="src-note reveal">
+      <span data-l="en">Prefer to build from source? You only need stable Rust:</span>
+      <span data-l="pt">Prefere compilar do código-fonte? Só precisa do Rust estável:</span>
+    </p>
+<pre class="reveal">git clone https://github.com/tnarnold/nerdminer-emu
+cd nerdminer-emu
+cargo run --release</pre>
+  </div>
+</section>
+
+<!-- ================= SETUP ================= -->
+<section id="setup" class="rule">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="label"><span class="idx">05</span> <span data-l="en">Setup</span><span data-l="pt">Configuração</span></span>
+      <h2 class="display"><span data-l="en">Mining in<br>2 <span class="slash">minutes</span></span><span data-l="pt">Minerando em<br>2 <span class="slash">minutos</span></span></h2>
+    </div>
+
+    <div class="setup">
+      <div class="step reveal">
+        <div class="num">01</div>
+        <h3><span data-l="en">Install and open</span><span data-l="pt">Instale e abra</span></h3>
+        <div data-l="en">
+          <p><b>macOS:</b> open the <code>.dmg</code> and drag the app to Applications. The app isn't notarized yet, so the first time: right-click → <b>Open</b> → <b>Open</b>.</p>
+          <p><b>Windows:</b> extract the zip and run <code>nerdminer-emu.exe</code>. If SmartScreen appears: <b>More info → Run anyway</b>.</p>
+          <p><b>Linux:</b> extract and run <code>./nerdminer-emu</code>. On GNOME, enable the AppIndicator extension to see the tray icon.</p>
+        </div>
+        <div data-l="pt">
+          <p><b>macOS:</b> abra o <code>.dmg</code> e arraste o app para Aplicativos. O app ainda não é notarizado, então na primeira vez: clique com o botão direito → <b>Abrir</b> → <b>Abrir</b>.</p>
+          <p><b>Windows:</b> extraia o zip e rode <code>nerdminer-emu.exe</code>. Se o SmartScreen aparecer: <b>Mais informações → Executar assim mesmo</b>.</p>
+          <p><b>Linux:</b> extraia e rode <code>./nerdminer-emu</code>. No GNOME, ative a extensão AppIndicator para ver o ícone na bandeja.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="num">02</div>
+        <h3><span data-l="en">Paste your BTC address</span><span data-l="pt">Cole seu endereço BTC</span></h3>
+        <p data-l="en">On first launch the ⚙ panel opens. Paste <b>your own</b> Bitcoin address (from any wallet: <code>bc1…</code>, <code>3…</code> or <code>1…</code>) and click <b>Salvar e reconectar</b> (save and reconnect). That address is where the prize goes.</p>
+        <p data-l="pt">Na primeira execução o painel ⚙ abre sozinho. Cole o <b>seu</b> endereço Bitcoin (de qualquer carteira: <code>bc1…</code>, <code>3…</code> ou <code>1…</code>) e clique em <b>Salvar e reconectar</b>. É para esse endereço que vai o prêmio.</p>
+        <img src="img/settings.png" alt="Settings panel" loading="lazy">
+      </div>
+      <div class="step reveal">
+        <div class="num">03</div>
+        <h3><span data-l="en">Choose CPU, GPU or both</span><span data-l="pt">Escolha CPU, GPU ou os dois</span></h3>
+        <p data-l="en">Under <b>Mineração</b> pick the <b>Dispositivo</b> (device). Set CPU threads and % per thread, and the GPU %. Start low (the default is 4 threads @ 50%) and raise it while watching temperature and fan noise.</p>
+        <p data-l="pt">Em <b>Mineração</b>, escolha o <b>Dispositivo</b>. Ajuste threads e % por thread da CPU e a % da GPU. Comece baixo (o padrão é 4 threads @ 50%) e aumente de olho na temperatura e no barulho da ventoinha.</p>
+      </div>
+      <div class="step reveal">
+        <div class="num">04</div>
+        <h3><span data-l="en">Watch the green dot</span><span data-l="pt">Espere a bolinha verde</span></h3>
+        <p data-l="en">On the Miner screen, the dot next to the Wi-Fi icon turns <b>green</b> when the pool is connected and the hashrate starts counting. Then hide it to the tray and forget about it. Follow your stats at <code>web.public-pool.io</code> using your address.</p>
+        <p data-l="pt">Na tela Miner, a bolinha ao lado do ícone de Wi-Fi fica <b>verde</b> quando a pool conecta e o hashrate começa a contar. Aí é só esconder na bandeja e esquecer. Acompanhe pelo <code>web.public-pool.io</code> usando seu endereço.</p>
+      </div>
+    </div>
+
+    <div class="callout reveal">
+      <iconify-icon icon="solar:shield-warning-bold-duotone"></iconify-icon>
+      <div>
+        <p data-l="en"><b>Red dot? It's almost always the firewall.</b> Mining is an outbound connection, so you <b>don't need UPnP or port forwarding</b>. But some corporate, school or ISP networks block the pool ports: <code>21496</code> (public-pool.io) and <code>3333</code> (solo.ckpool.org). Test with <code>nc -vz public-pool.io 21496</code>; if it times out, allow that outbound TCP port or try another network.</p>
+        <p data-l="pt"><b>Bolinha vermelha? Quase sempre é firewall.</b> Minerar é uma conexão de saída, então você <b>não precisa de UPnP nem de redirecionamento de portas</b>. Mas algumas redes de empresa, escola ou provedor bloqueiam as portas das pools: <code>21496</code> (public-pool.io) e <code>3333</code> (solo.ckpool.org). Teste com <code>nc -vz public-pool.io 21496</code>; se der timeout, libere essa porta TCP de saída ou tente outra rede.</p>
+        <p><a href="https://github.com/tnarnold/nerdminer-emu/blob/main/docs/MANUAL.md" data-l="en">Read the full user manual →</a><a href="https://github.com/tnarnold/nerdminer-emu/blob/main/docs/MANUAL.pt-BR.md" data-l="pt">Leia o manual completo →</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq" class="rule">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="label"><span class="idx">06</span> FAQ</span>
+      <h2 class="display"><span data-l="en">Honest <span class="slash">answers</span></span><span data-l="pt">Respostas <span class="slash">honestas</span></span></h2>
+    </div>
+    <div class="faq reveal">
+      <details>
+        <summary><span data-l="en">Will I make money?</span><span data-l="pt">Vou ganhar dinheiro?</span></summary>
+        <div class="a">
+          <p data-l="en">Almost certainly not. Solo mining with a computer is a lottery with very long odds; the electricity you spend will likely be worth more than what you "earn" on average. Do it for fun and learning. If you hit a block, celebrate.</p>
+          <p data-l="pt">Quase certamente não. Minerar solo com um computador é uma loteria com chances muito baixas; a energia gasta provavelmente vale mais do que o que você "ganha" na média. Faça por diversão e aprendizado. Se achar um bloco, comemore.</p>
+        </div>
+      </details>
+      <details>
+        <summary><span data-l="en">Do I need a private key, an account or KYC?</span><span data-l="pt">Preciso de chave privada, conta ou KYC?</span></summary>
+        <div class="a">
+          <p data-l="en">No. You only give the pool a <b>public</b> receiving address. Never paste a private key or seed phrase anywhere in this app. Solo pools have no sign-up.</p>
+          <p data-l="pt">Não. Você só informa à pool um endereço <b>público</b> de recebimento. Nunca cole chave privada ou frase-semente no app. Pools solo não têm cadastro.</p>
+        </div>
+      </details>
+      <details>
+        <summary><span data-l="en">What are "shares" and "best difficulty"?</span><span data-l="pt">O que são "shares" e "best difficulty"?</span></summary>
+        <div class="a">
+          <p data-l="en">A share is a hash that beats an easy target set by the pool. It proves your miner is working but pays nothing in solo mode. <b>Best difficulty</b> is how close your best hash ever got; a block needs a difficulty equal to the network's (shown in the ticker above).</p>
+          <p data-l="pt">Share é um hash que bate um alvo fácil definido pela pool. Prova que o minerador está trabalhando, mas no modo solo não paga nada. <b>Best difficulty</b> é o quão perto seu melhor hash já chegou; um bloco precisa de uma dificuldade igual à da rede (mostrada lá em cima).</p>
+        </div>
+      </details>
+      <details>
+        <summary><span data-l="en">Which pool should I use?</span><span data-l="pt">Qual pool devo usar?</span></summary>
+        <div class="a">
+          <p data-l="en"><b>public-pool.io:21496</b> (default, no fee) or <b>solo.ckpool.org:3333</b> (keeps a small fee if you win). Both are solo: if you find a block, the reward goes to your address. You can also point it at your own pool.</p>
+          <p data-l="pt"><b>public-pool.io:21496</b> (padrão, sem taxa) ou <b>solo.ckpool.org:3333</b> (fica com uma pequena taxa se você ganhar). As duas são solo: se você achar um bloco, a recompensa vai para o seu endereço. Também dá para usar a sua própria pool.</p>
+        </div>
+      </details>
+      <details>
+        <summary><span data-l="en">Is it safe for my computer?</span><span data-l="pt">É seguro para o meu computador?</span></summary>
+        <div class="a">
+          <p data-l="en">Yes, within reason. The usage limits are real duty cycles, so the CPU/GPU rests between bursts. At 100% on many threads your machine will run hot and loud, just like any heavy workload. Laptops on battery: keep it low or paused.</p>
+          <p data-l="pt">Sim, com bom senso. Os limites são ciclos de trabalho reais: a CPU/GPU descansa entre as rajadas. Com 100% em muitas threads a máquina vai esquentar e fazer barulho, como em qualquer carga pesada. Notebook na bateria: mantenha baixo ou pausado.</p>
+        </div>
+      </details>
+      <details>
+        <summary><span data-l="en">Is this the official NerdMiner?</span><span data-l="pt">Este é o NerdMiner oficial?</span></summary>
+        <div class="a">
+          <p data-l="en">No. It's an independent desktop emulator that reuses the interface of <a href="https://github.com/BitMaker-hub/NerdMiner_v2">NerdMiner v2</a> by BitMaker (MIT license). If you enjoy it, consider getting a real NerdMiner board: it's a great way to support the original project.</p>
+          <p data-l="pt">Não. É um emulador de desktop independente que reutiliza a interface do <a href="https://github.com/BitMaker-hub/NerdMiner_v2">NerdMiner v2</a> da BitMaker (licença MIT). Se gostar, considere comprar uma placa NerdMiner de verdade: é um ótimo jeito de apoiar o projeto original.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINAL ================= -->
+<section class="final rule">
+  <div class="wrap reveal">
+    <span class="label"><span class="idx">∞</span> <span data-l="en">Next block in ~10 min</span><span data-l="pt">Próximo bloco em ~10 min</span></span>
+    <h2 class="display"><span data-l="en">Buy a ticket<br>to <span class="slash">every</span> block</span><span data-l="pt">Um bilhete<br>para <span class="slash">cada</span> bloco</span></h2>
+    <div class="cta">
+      <a class="btn primary" href="#download"><iconify-icon icon="solar:download-minimalistic-bold"></iconify-icon><span data-l="en">Download</span><span data-l="pt">Baixar</span></a>
+      <a class="btn" href="https://github.com/tnarnold/nerdminer-emu"><iconify-icon icon="mdi:github"></iconify-icon><span data-l="en">Star on GitHub</span><span data-l="pt">Estrela no GitHub</span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="brand" href="#top" style="color:var(--text)"><img src="img/icon.png" alt="" width="24" height="24">NerdMiner<span class="slash">/</span>EMU</a>
+      <p style="margin:12px 0 0;max-width:420px">
+        <span data-l="en">MIT licensed. Interface based on NerdMiner v2 © 2023 BitMaker (MIT). Network data by mempool.space. Not affiliated with the original project.</span>
+        <span data-l="pt">Licença MIT. Interface baseada no NerdMiner v2 © 2023 BitMaker (MIT). Dados da rede por mempool.space. Sem vínculo com o projeto original.</span>
+      </p>
+    </div>
+    <div class="cols">
+      <a href="https://github.com/tnarnold/nerdminer-emu">GitHub</a>
+      <a href="https://github.com/tnarnold/nerdminer-emu/releases">Releases</a>
+      <a href="https://github.com/tnarnold/nerdminer-emu/blob/main/docs/MANUAL.md" data-l="en">Manual</a>
+      <a href="https://github.com/tnarnold/nerdminer-emu/blob/main/docs/MANUAL.pt-BR.md" data-l="pt">Manual</a>
+      <a href="https://github.com/BitMaker-hub/NerdMiner_v2">NerdMiner v2</a>
+      <a href="https://gobtc.com.br">Go BTC</a>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
