@@ -105,7 +105,7 @@ atualizados a cada 60 segundos.
 
 ![Tela Clock](images/screen-clock.png)
 
-Relógio grande, preço do BTC em dólar (no topo), seu hashrate (amarelo) e a altura do bloco atual
+Relógio grande, preço do BTC na sua moeda (no topo), seu hashrate (amarelo) e a altura do bloco atual
 (azul).
 
 ### Global stats
@@ -114,7 +114,7 @@ Relógio grande, preço do BTC em dólar (no topo), seu hashrate (amarelo) e a a
 
 | Campo | Significado |
 |---|---|
-| Preço e hora | Preço do BTC em dólar e hora local. |
+| Preço e hora | Preço do BTC na sua moeda e hora local. |
 | **Medium fee** | Taxa para confirmar em ~30 minutos (sat/vB). |
 | **Difficulty** | Dificuldade atual da rede Bitcoin (ex.: `148T`). |
 | **Current block** | Altura do bloco atual. |
@@ -125,7 +125,7 @@ Relógio grande, preço do BTC em dólar (no topo), seu hashrate (amarelo) e a a
 
 ![Tela BTC price](images/screen-price.png)
 
-Preço do BTC em dólar em destaque, hora local, seu hashrate e a altura do bloco atual.
+Preço do BTC na sua moeda em destaque (em dólar aparece `$` como no aparelho; ex.: `R$430459`, `€69608`), hora local, seu hashrate e a altura do bloco atual.
 
 ## 5. Configurações (⚙)
 
@@ -187,6 +187,7 @@ barulhentos.
 |---|---|
 | **Iniciar escondido na bandeja** | O app abre direto na bandeja, sem mostrar a janela. Útil junto com iniciar com o sistema. |
 | **Zoom da tela** | Tamanho da tela: 1x (320×170, como o aparelho), 1.5x, 2x ou 2.5x. |
+| **Moeda** | Moeda do preço do BTC (telas e bandeja) e do custo das transações: BRL, USD, EUR, GBP, CAD, CHF, AUD ou JPY. Padrão: pelo idioma do sistema (português → BRL). Também na bandeja: *Moeda ▸*. |
 
 ### Log
 
@@ -211,7 +212,7 @@ de menus mostra*. Padrão: hashrate + taxa recomendada, por exemplo ` 82.4 MH/s 
 | Taxa recomendada | `⛽🟢 1 sat/vB` | taxa para usar agora; a bolinha é a ocupação da rede |
 | Último bloco | `⛓ 4m` | minutos desde o último bloco da rede |
 | Melhor dificuldade | `★ 0.133` | melhor share desta sessão |
-| Preço | `R$ 431k` | preço do BTC (em real, ou dólar se o real não estiver disponível) |
+| Preço | `R$ 430k` | preço do BTC na moeda escolhida |
 
 No **Windows e Linux** a bandeja não mostra texto: passe o mouse sobre o ícone para ver uma dica
 com o mesmo resumo, e dê um duplo clique para mostrar/esconder a janela.
@@ -227,17 +228,17 @@ Chance hoje   1 em 92,2 bi · bloco a cada ~252 mi anos
 ─────
 Bloco   #974.516 · AntPool · há 2 min
 Ajuste de dificuldade   39% · −2,66% em ~8,8 dias (1.228 blocos)
-BTC   US$ 78.454 · R$ 430.462
+BTC   R$ 430.462
 ─────
 REDE BITCOIN   🟢 Livre
 Fila pagante   ▕███░░░░░░░░░░░░░▏ 0,84 bloco · ~10 min para limpar
 Mempool   47,3 mil tx · 11,4 vMB (maioria abaixo de 1 sat/vB)
 Próximo bloco   0,12 – 137 sat/vB · mediana 1,3 · 4,3 mil tx
 TAXA PARA ENVIAR AGORA   (Simples 1→2, SegWit · 141 vB)
-🚀 Próximo bloco (~10 min)   2 sat/vB · 282 sats ≈ US$ 0,22 · R$ 1,21
-⏱ ~30 min   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
-🕐 ~1 hora   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
-🐢 Sem pressa   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
+🚀 Próximo bloco (~10 min)   2 sat/vB · 282 sats ≈ R$ 1,21
+⏱ ~30 min   1 sat/vB · 141 sats ≈ R$ 0,61
+🕐 ~1 hora   1 sat/vB · 141 sats ≈ R$ 0,61
+🐢 Sem pressa   1 sat/vB · 141 sats ≈ R$ 0,61
 ✅ Recomendado: 1 sat/vB — rede livre, não pague mais
 ─────
 Dispositivo ▸ · Uso da CPU ▸ · Uso da GPU ▸ · Tamanho da transação ▸ · Barra de menus mostra ▸
@@ -255,7 +256,7 @@ menos a taxa mínima recomendada e mede essa fila em blocos (1 bloco = 1 MvB, ~1
 | 🟠 Congestionada | 6–36 blocos (~6 h) | *~1 hora*; taxa baixa pode demorar horas |
 | 🔴 Muito congestionada | > 36 blocos | *~1 hora*; envie só se for urgente |
 
-**Custo para enviar** = taxa × tamanho da transação, em sats, US$ e R$. Escolha o tamanho em
+**Custo para enviar** = taxa × tamanho da transação, em sats e na sua moeda (*Moeda ▸*). Escolha o tamanho em
 *Tamanho da transação*: simples SegWit 1→2 (141 vB, padrão), Taproot 1→2 (154 vB) ou consolidação
 5→1 (382 vB).
 
@@ -263,7 +264,7 @@ menos a taxa mínima recomendada e mede essa fila em blocos (1 bloco = 1 MvB, ~1
 *Uso da CPU* (10–100 % por thread), *Uso da GPU* (10–100 %). *Ver na pool…* abre sua página de
 estatísticas no public-pool.io ou no solo.ckpool.org; *Ver no mempool.space…* abre o último bloco.
 
-Fontes: mempool.space (blocos, mempool, taxas, dificuldade, preço em dólar) e Coinbase, com a
+Fontes: mempool.space (blocos, mempool, taxas, dificuldade; preço em USD, EUR, GBP, CAD, CHF, AUD, JPY) e Coinbase, com a
 Binance como reserva, para BTC/BRL. Taxas e mempool são atualizados a cada 30 s; o resto, a cada
 60 s.
 
@@ -357,6 +358,7 @@ Dá para editar com o app fechado. Campos que faltarem usam o valor padrão.
 | `zoom` | `1.5` | Zoom da tela (1.0–2.5). |
 | `tray_fields` | `["hashrate", "fee"]` | Campos na barra de menus (macOS): `hashrate`, `fee`, `last_block`, `best_diff`, `price`. |
 | `tx_vbytes` | `141` | Tamanho da transação usado no "custo para enviar", em vB. |
+| `currency` | pelo idioma do sistema | `BRL`, `USD`, `EUR`, `GBP`, `CAD`, `CHF`, `AUD` ou `JPY`. |
 
 Para voltar tudo ao padrão, feche o app e apague o arquivo.
 

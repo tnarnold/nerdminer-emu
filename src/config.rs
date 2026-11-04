@@ -28,6 +28,8 @@ pub struct Config {
     pub tray_fields: Vec<String>,
     /// Transaction size (vB) used to estimate the cost of sending now.
     pub tx_vbytes: u32,
+    /// Display currency for the BTC price and fee costs (ISO code, see `currency`).
+    pub currency: String,
 }
 
 impl Default for Config {
@@ -51,6 +53,7 @@ impl Default for Config {
             zoom: 1.5,
             tray_fields: vec!["hashrate".into(), "fee".into()],
             tx_vbytes: 141,
+            currency: crate::currency::default_for_system(),
         }
     }
 }

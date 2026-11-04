@@ -125,6 +125,16 @@ impl Lcd<'_> {
         let font = FontId::new(size * self.s, FontFamily::Name("nerdsans".into()));
         self.p.text(self.pos(x, y), anchor, text, font, color);
     }
+    /// Like `sans`, shrinking the font so the text is at most `max_w` device px wide
+    /// (other currencies have longer prices than the firmware's "$12345").
+    fn sans_fit(&self, text: &str, x: f32, y: f32, size: f32, max_w: f32, color: Color32, anchor: Align2) {
+        let font = |sz: f32| FontId::new(sz * self.s, FontFamily::Name("nerdsans".into()));
+        let w = self.p.layout_no_wrap(text.to_string(), font(size), color).size().x / self.s;
+        let fit = if w > max_w { size * max_w / w } else { size };
+        // Top-anchored text: move down so the smaller text stays vertically centered.
+        let dy = if anchor.y() == egui::Align::Min { (size - fit) / 2.0 } else { 0.0 };
+        self.p.text(self.pos(x, y + dy), anchor, text, font(fit), color);
+    }
     fn fill(&self, x: f32, y: f32, w: f32, h: f32, color: Color32) {
         let r = Rect::from_min_size(self.pos(x, y), Vec2::new(w, h) * self.s);
         self.p.rect_filled(r.intersect(self.rect), 0.0, color);
@@ -153,8 +163,10 @@ fn now_hm() -> String {
     chrono::Local::now().format("%H:%M").to_string()
 }
 
-fn price(net: &NetInfo) -> String {
-    net.btc_price_usd.map(|p| format!("${}", p as u64)).unwrap_or_else(|| "$--".into())
+fn price(net: &NetInfo, currency: &str) -> String {
+    net.price(currency)
+        .map(|p| crate::currency::price_screen(p, currency))
+        .unwrap_or_else(|| format!("{}--", crate::currency::screen_symbol(currency)))
 }
 
 fn height(net: &NetInfo) -> String {
@@ -164,11 +176,12 @@ fn height(net: &NetInfo) -> String {
 impl Screens {
     pub fn draw(&self, lcd: &Lcd, screen: Screen, s: &Shared) {
         let net = s.net.lock().unwrap().clone();
+        let cur = s.config.read().unwrap().currency.clone();
         match screen {
             Screen::Miner => self.miner(lcd, s),
-            Screen::Clock => self.clock(lcd, s, &net),
-            Screen::GlobalHash => self.global(lcd, &net),
-            Screen::BtcPrice => self.price(lcd, s, &net),
+            Screen::Clock => self.clock(lcd, s, &net, &cur),
+            Screen::GlobalHash => self.global(lcd, &net, &cur),
+            Screen::BtcPrice => self.price(lcd, s, &net, &cur),
         }
     }
 
@@ -197,20 +210,20 @@ impl Screens {
         }
     }
 
-    fn clock(&self, l: &Lcd, s: &Shared, net: &NetInfo) {
+    fn clock(&self, l: &Lcd, s: &Shared, net: &NetInfo, cur: &str) {
         l.bg(&self.clock);
         let (hr, unit) = hashrate_parts(s.hashrate());
         l.digital(&hr, 94.0, 129.0, 25.0, TFT_BLACK, Align2::RIGHT_TOP);
         l.unit(unit, SMALL_KHS);
-        l.sans(&price(net), 202.0, 3.0, 13.0, TFT_BLACK, Align2::LEFT_TOP);
+        l.sans_fit(&price(net, cur), 202.0, 3.0, 13.0, 82.0, TFT_BLACK, Align2::LEFT_TOP);
         l.digital(&height(net), 254.0, 140.0, 18.0, TFT_BLACK, Align2::RIGHT_TOP);
         // FreeSansBold18pt at text size 2
         l.sans(&now_hm(), 130.0, 50.0, 50.0, C_DEDB, Align2::LEFT_TOP);
     }
 
-    fn global(&self, l: &Lcd, net: &NetInfo) {
+    fn global(&self, l: &Lcd, net: &NetInfo, cur: &str) {
         l.bg(&self.global);
-        l.sans(&price(net), 198.0, 3.0, 13.0, TFT_BLACK, Align2::LEFT_TOP);
+        l.sans_fit(&price(net, cur), 198.0, 3.0, 13.0, 62.0, TFT_BLACK, Align2::LEFT_TOP);
         l.sans(&now_hm(), 268.0, 3.0, 13.0, TFT_BLACK, Align2::LEFT_TOP);
         let fee = net.fee_half_hour.map(|f| format!("{f:.0} sat/vB")).unwrap_or_else(|| "-- sat/vB".into());
         l.sans(&fee, 302.0, 52.0, 13.0, C_9C92, Align2::RIGHT_TOP);
@@ -233,7 +246,7 @@ impl Screens {
         l.sans(&format!("{remaining} BLOCKS"), 72.0, 159.0, 11.0, TFT_BLACK, Align2::CENTER_CENTER);
     }
 
-    fn price(&self, l: &Lcd, s: &Shared, net: &NetInfo) {
+    fn price(&self, l: &Lcd, s: &Shared, net: &NetInfo, cur: &str) {
         l.bg(&self.price);
         let (hr, unit) = hashrate_parts(s.hashrate());
         l.digital(&hr, 94.0, 129.0, 25.0, TFT_BLACK, Align2::RIGHT_TOP);
@@ -241,7 +254,7 @@ impl Screens {
         l.digital(&height(net), 254.0, 138.0, 18.0, TFT_WHITE, Align2::RIGHT_TOP);
         l.sans(&now_hm(), 222.0, 3.0, 13.0, TFT_BLACK, Align2::LEFT_TOP);
         // FreeSansBold24pt
-        l.sans(&price(net), 300.0, 58.0, 33.0, C_DEDB, Align2::RIGHT_TOP);
+        l.sans_fit(&price(net, cur), 300.0, 58.0, 33.0, 190.0, C_DEDB, Align2::RIGHT_TOP);
     }
 
     pub fn loading(&self, l: &Lcd) {

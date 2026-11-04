@@ -22,9 +22,10 @@ Runs on **macOS, Linux and Windows**.
     instructions when available (ARMv8 / SHA-NI).
   - **GPU**: % usage (duty cycle) of a WGSL compute shader (wgpu → Metal / Vulkan / DX12).
     The GPU is **off** by default and only used when selected.
-- System tray as a mini dashboard: status dot, mining stats, **network occupancy and the fee to use right now** (with the cost in sats, US$ and R$), quick CPU/GPU controls. On macOS the fields you choose appear in the menu bar.
+- System tray as a mini dashboard: status dot, mining stats, **network occupancy and the fee to use right now** (with the cost in sats and your currency), quick CPU/GPU controls. On macOS the fields you choose appear in the menu bar.
 - Borderless window, "always on top" option, 1x–2.5x zoom, start hidden.
 - Discreet Go BTC logo in the top-left corner; clicking it opens https://gobtc.com.br.
+- BTC price in your currency (BRL, USD, EUR, GBP, CAD, CHF, AUD, JPY).
 - Network data (price, block height, global hashrate, fees, halving) from mempool.space.
 
 > Solo mining with a CPU/GPU is a lottery: the chance of finding a block is tiny.

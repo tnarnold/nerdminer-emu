@@ -46,6 +46,7 @@ pub enum TrayCmd {
     CpuUsage(u32),
     GpuUsage(u32),
     TxSize(u32),
+    Currency(&'static str),
     Field(&'static str),
     OpenPool,
     OpenMempool,
@@ -67,6 +68,7 @@ fn parse_cmd(id: &str) -> Option<TrayCmd> {
         "cpu" => TrayCmd::CpuUsage(arg.parse().ok()?),
         "gpu" => TrayCmd::GpuUsage(arg.parse().ok()?),
         "tx" => TrayCmd::TxSize(arg.parse().ok()?),
+        "cur" => TrayCmd::Currency(crate::currency::CURRENCIES.iter().find(|c| c.0 == arg)?.0),
         "field" => TrayCmd::Field(FIELDS.iter().find(|(k, _)| *k == arg)?.0),
         _ => return None,
     })
@@ -135,6 +137,7 @@ pub struct Tray {
     cpu_items: Vec<(u32, CheckMenuItem)>,
     gpu_items: Vec<(u32, CheckMenuItem)>,
     tx_items: Vec<(u32, CheckMenuItem)>,
+    cur_items: Vec<(&'static str, CheckMenuItem)>,
     field_items: Vec<(&'static str, CheckMenuItem)>,
     last_status: Option<Status>,
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
@@ -218,26 +221,16 @@ fn field_text(key: &str, s: &Shared, n: &crate::state::NetInfo, paused: bool) ->
         }
         "best_diff" => Some(format!("★ {}", fmt::diff(s.best_diff.get()))),
         "price" => {
-            if let Some(brl) = n.btc_price_brl {
-                Some(format!("R$ {}k", fmt::br(brl / 1000.0, 0)))
-            } else {
-                n.btc_price_usd.map(|u| format!("${}k", fmt::br(u / 1000.0, 1)))
-            }
+            let cur = &s.config.read().unwrap().currency;
+            n.price(cur).map(|p| crate::currency::price_short(p, cur))
         }
         _ => None,
     }
 }
 
-fn money(sats: f64, n: &crate::state::NetInfo) -> String {
-    let btc = sats / 1e8;
-    let mut parts = Vec::new();
-    if let Some(u) = n.btc_price_usd {
-        parts.push(format!("US$ {}", fmt::br(btc * u, 2)));
-    }
-    if let Some(b) = n.btc_price_brl {
-        parts.push(format!("R$ {}", fmt::br(btc * b, 2)));
-    }
-    if parts.is_empty() { String::new() } else { format!("≈ {}", parts.join(" · ")) }
+/// "≈ R$ 1,21" in the chosen currency (empty while the price is unknown).
+fn money(sats: f64, n: &crate::state::NetInfo, cur: &str) -> String {
+    n.price(cur).map(|p| format!("≈ {}", crate::currency::amount(sats / 1e8 * p, cur))).unwrap_or_default()
 }
 
 fn bar(frac: f64, width: usize) -> String {
@@ -303,6 +296,10 @@ impl Tray {
         let cpu_items: Vec<_> = CPU_STEPS.iter().map(|&p| (p, check(format!("cpu:{p}"), &format!("{p}% por thread"), false))).collect();
         let gpu_items: Vec<_> = GPU_STEPS.iter().map(|&p| (p, check(format!("gpu:{p}"), &format!("{p}%"), false))).collect();
         let tx_items: Vec<_> = TX_SIZES.iter().map(|&(vb, t)| (vb, check(format!("tx:{vb}"), t, false))).collect();
+        let cur_items: Vec<_> = crate::currency::CURRENCIES
+            .iter()
+            .map(|&(c, sym, name)| (c, check(format!("cur:{c}"), &format!("{name} ({sym})"), false)))
+            .collect();
         let field_items: Vec<_> = FIELDS.iter().map(|&(k, t)| (k, check(format!("field:{k}"), t, false))).collect();
 
         let sub = |title: &str, items: Vec<&CheckMenuItem>| -> Result<Submenu, String> {
@@ -316,6 +313,7 @@ impl Tray {
         menu.append(&sub("Uso da CPU", cpu_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
         menu.append(&sub("Uso da GPU", gpu_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
         menu.append(&sub("Tamanho da transação", tx_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
+        menu.append(&sub("Moeda", cur_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
         // Only macOS shows text next to the tray icon.
         if cfg!(target_os = "macos") {
             menu.append(&sub("Barra de menus mostra", field_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
@@ -366,6 +364,7 @@ impl Tray {
             cpu_items,
             gpu_items,
             tx_items,
+            cur_items,
             field_items,
             last_status: None,
             last_title: String::new(),
@@ -416,7 +415,7 @@ impl Tray {
             tip += &format!("\nBloco #{} · há {}", b.height, fmt::duration(now_unix().saturating_sub(b.time) as f64));
         }
         if let (Some((c, _)), Some(fee)) = (netinfo::congestion(&n), netinfo::congestion(&n).and_then(|(c, _)| netinfo::recommendation(c).0.fee(&n))) {
-            let cost = money(fee * cfg.tx_vbytes as f64, &n);
+            let cost = money(fee * cfg.tx_vbytes as f64, &n, &cfg.currency);
             tip += &format!("\nRede {} {} · enviar: {} sat/vB {}", c.dot(), c.label().to_lowercase(), fmt::feerate(fee), cost);
         }
         if cfg!(target_os = "windows") && tip.chars().count() > 127 {
@@ -489,14 +488,8 @@ impl Tray {
                 None => "Ajuste de dificuldade   —".into(),
             },
         );
-        let mut price = Vec::new();
-        if let Some(u) = n.btc_price_usd {
-            price.push(format!("US$ {}", fmt::br(u, 0)));
-        }
-        if let Some(b) = n.btc_price_brl {
-            price.push(format!("R$ {}", fmt::br(b, 0)));
-        }
-        self.set_row(Row::Price, format!("BTC   {}", if price.is_empty() { "—".into() } else { price.join(" · ") }));
+        let price = n.price(&cfg.currency).map(|p| crate::currency::price(p, &cfg.currency));
+        self.set_row(Row::Price, format!("BTC   {}", price.unwrap_or_else(|| "—".into())));
 
         // ---- occupancy and fees
         match (netinfo::congestion(&n), &n.mempool) {
@@ -551,7 +544,7 @@ impl Tray {
             let text = match t.fee(&n) {
                 Some(f) => {
                     let sats = (f * cfg.tx_vbytes as f64).round();
-                    format!("{}   {} sat/vB · {} sats {}", t.label(), fmt::feerate(f), fmt::br(sats, 0), money(sats, &n))
+                    format!("{}   {} sat/vB · {} sats {}", t.label(), fmt::feerate(f), fmt::br(sats, 0), money(sats, &n, &cfg.currency))
                 }
                 None => format!("{}   —", t.label()),
             };
@@ -593,6 +586,10 @@ impl Tray {
         for (k, it) in &self.field_items {
             it.set_checked(cfg.tray_fields.iter().any(|f| f == k));
         }
+        let cur = crate::currency::code(&cfg.currency);
+        for (c, it) in &self.cur_items {
+            it.set_checked(*c == cur);
+        }
 
         // Debug: NERDMINER_TRAY_DUMP=1 prints the menu to stderr (screenshots of the
         // menu bar are not always possible).
@@ -613,6 +610,8 @@ mod tests {
         assert!(matches!(parse_cmd("dev:both"), Some(TrayCmd::Device(Device::Both))));
         assert!(matches!(parse_cmd("tx:154"), Some(TrayCmd::TxSize(154))));
         assert!(matches!(parse_cmd("field:fee"), Some(TrayCmd::Field("fee"))));
+        assert!(matches!(parse_cmd("cur:EUR"), Some(TrayCmd::Currency("EUR"))));
+        assert!(parse_cmd("cur:XYZ").is_none());
         assert!(parse_cmd("field:nope").is_none());
         assert!(parse_cmd("cpu:x").is_none());
     }

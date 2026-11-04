@@ -2,6 +2,7 @@
 
 mod app;
 mod config;
+mod currency;
 mod fmt;
 mod gpu;
 mod miner;

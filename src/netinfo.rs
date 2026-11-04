@@ -87,14 +87,22 @@ pub fn spawn(shared: Arc<Shared>) {
                 let mblocks = get(&format!("{BASE}/v1/fees/mempool-blocks"));
                 let blocks = get(&format!("{BASE}/v1/blocks"));
                 let slow = tick % 2 == 0;
-                let price = if slow { get(&format!("{BASE}/v1/prices")).and_then(|v| v["USD"].as_f64()) } else { None };
+                let prices = if slow { get(&format!("{BASE}/v1/prices")) } else { None };
                 let brl = if slow { price_brl() } else { None };
                 let hr = if slow { get(&format!("{BASE}/v1/mining/hashrate/3d")) } else { None };
                 let adj = if slow { get(&format!("{BASE}/v1/difficulty-adjustment")) } else { None };
                 {
                     let mut n = shared.net.lock().unwrap();
-                    if price.is_some() { n.btc_price_usd = price; }
-                    if brl.is_some() { n.btc_price_brl = brl; }
+                    if let Some(p) = &prices {
+                        for (code, _, _) in crate::currency::CURRENCIES {
+                            if let Some(v) = p[code].as_f64() {
+                                n.prices.insert(code.to_string(), v);
+                            }
+                        }
+                    }
+                    if let Some(b) = brl {
+                        n.prices.insert("BRL".into(), b);
+                    }
                     if let Some(h) = &hr {
                         if let Some(x) = h["currentHashrate"].as_f64() { n.net_hashrate = Some(x); }
                         if let Some(x) = h["currentDifficulty"].as_f64() { n.net_difficulty = Some(x); }

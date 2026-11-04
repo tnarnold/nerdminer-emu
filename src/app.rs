@@ -20,7 +20,7 @@ const HEADER_H: f32 = 24.0;
 const LOGO: f32 = 16.0;
 const BRAND_URL: &str = "https://gobtc.com.br";
 pub const COMPACT: Vec2 = Vec2::new(SCREEN.x + BEZEL * 2.0, SCREEN.y + BEZEL * 2.0 + TOOLBAR_H + HEADER_H);
-const SETTINGS_H: f32 = 430.0;
+const SETTINGS_H: f32 = 458.0;
 
 
 pub struct NerdApp {
@@ -122,6 +122,7 @@ impl NerdApp {
         cfg.start_paused = s.paused.load(Relaxed);
         cfg.tray_fields = self.draft.tray_fields.clone();
         cfg.tx_vbytes = self.draft.tx_vbytes;
+        cfg.currency = self.draft.currency.clone();
         cfg.save();
     }
 
@@ -168,6 +169,10 @@ impl NerdApp {
             }
             TrayCmd::GpuUsage(p) => {
                 self.draft.gpu_usage = p;
+                self.persist_runtime();
+            }
+            TrayCmd::Currency(c) => {
+                self.draft.currency = c.to_string();
                 self.persist_runtime();
             }
             TrayCmd::TxSize(vb) => {
@@ -415,6 +420,24 @@ impl NerdApp {
                     }
                 }
             });
+            ui.horizontal(|ui| {
+                ui.label("Moeda");
+                let cur = crate::currency::code(&self.draft.currency);
+                let label = |c: &str| {
+                    let (code, sym, name) = crate::currency::CURRENCIES.iter().find(|x| x.0 == c).copied().unwrap_or(("USD", "US$", ""));
+                    format!("{code} · {sym} · {name}")
+                };
+                egui::ComboBox::from_id_salt("currency").selected_text(label(cur)).width(220.0).show_ui(ui, |ui| {
+                    for (code, _, _) in crate::currency::CURRENCIES {
+                        if ui.selectable_label(cur == code, label(code)).clicked() {
+                            self.draft.currency = code.to_string();
+                            changed = true;
+                        }
+                    }
+                });
+            })
+            .response
+            .on_hover_text("Preço do BTC nas telas e na bandeja, e custo das transações");
             if changed {
                 self.persist_runtime();
             }

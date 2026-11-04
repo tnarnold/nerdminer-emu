@@ -17,8 +17,8 @@ pub struct Submit {
 
 #[derive(Default, Clone)]
 pub struct NetInfo {
-    pub btc_price_usd: Option<f64>,
-    pub btc_price_brl: Option<f64>,
+    /// BTC price per currency code ("USD", "BRL", "EUR", ...).
+    pub prices: std::collections::BTreeMap<String, f64>,
     pub block_height: Option<u64>,
     pub net_hashrate: Option<f64>,
     pub net_difficulty: Option<f64>,
@@ -30,6 +30,12 @@ pub struct NetInfo {
     pub mempool: Option<MempoolInfo>,
     pub last_block: Option<BlockInfo>,
     pub diff_adj: Option<DiffAdjustment>,
+}
+
+impl NetInfo {
+    pub fn price(&self, currency: &str) -> Option<f64> {
+        self.prices.get(crate::currency::code(currency)).copied()
+    }
 }
 
 #[derive(Default, Clone, Debug)]

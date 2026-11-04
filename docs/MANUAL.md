@@ -108,7 +108,7 @@ starts. Network data (price, block height, fees…) comes from mempool.space and
 
 ![Clock screen](images/screen-clock.png)
 
-Large clock, BTC price in USD (top), your hashrate (yellow) and the current block height (blue).
+Large clock, BTC price in your currency (top), your hashrate (yellow) and the current block height (blue).
 
 ### Global stats
 
@@ -116,7 +116,7 @@ Large clock, BTC price in USD (top), your hashrate (yellow) and the current bloc
 
 | Field | Meaning |
 |---|---|
-| Price and time | BTC price in USD and local time. |
+| Price and time | BTC price in your currency and local time. |
 | **Medium fee** | Fee to be confirmed within ~30 minutes (sat/vB). |
 | **Difficulty** | Current Bitcoin network difficulty (e.g. `148T`). |
 | **Current block** | Current block height. |
@@ -127,7 +127,7 @@ Large clock, BTC price in USD (top), your hashrate (yellow) and the current bloc
 
 ![BTC price screen](images/screen-price.png)
 
-Large BTC price in USD, local time, your hashrate and the current block height.
+Large BTC price in your currency (USD shows `$` like the device; e.g. `R$430459`, `€69608`), local time, your hashrate and the current block height.
 
 ## 5. Settings (⚙)
 
@@ -189,6 +189,7 @@ Mining at high usage for long periods produces heat. Laptops may throttle or get
 |---|---|
 | **Iniciar escondido na bandeja** (start hidden in tray) | The app starts in the tray, without showing the window. Useful together with starting at login. |
 | **Zoom da tela** (screen zoom) | Screen size: 1x (320×170, like the device), 1.5x, 2x or 2.5x. |
+| **Moeda** (currency) | Currency for the BTC price (screens and tray) and fee costs: BRL, USD, EUR, GBP, CAD, CHF, AUD or JPY. Default: from the system language (Portuguese → BRL). Also in the tray: *Moeda ▸*. |
 
 ### Log
 
@@ -212,7 +213,7 @@ StatusNotifier on Linux). It works as a small text dashboard, so you rarely need
 | Recommended fee | `⛽🟢 1 sat/vB` | fee to use right now; the dot is the network occupancy |
 | Last block | `⛓ 4m` | minutes since the last block on the network |
 | Best difficulty | `★ 0.133` | best share of this session |
-| Price | `R$ 431k` | BTC price (BRL, or USD if BRL is unavailable) |
+| Price | `R$ 430k` | BTC price in the chosen currency |
 
 On **Windows and Linux** the tray can't show text: hover the icon for a tooltip with the same
 summary, and double-click it to show/hide the window.
@@ -228,17 +229,17 @@ Chance hoje   1 em 92,2 bi · bloco a cada ~252 mi anos
 ─────
 Bloco   #974.516 · AntPool · há 2 min
 Ajuste de dificuldade   39% · −2,66% em ~8,8 dias (1.228 blocos)
-BTC   US$ 78.454 · R$ 430.462
+BTC   R$ 430.462
 ─────
 REDE BITCOIN   🟢 Livre
 Fila pagante   ▕███░░░░░░░░░░░░░▏ 0,84 bloco · ~10 min para limpar
 Mempool   47,3 mil tx · 11,4 vMB (maioria abaixo de 1 sat/vB)
 Próximo bloco   0,12 – 137 sat/vB · mediana 1,3 · 4,3 mil tx
 TAXA PARA ENVIAR AGORA   (Simples 1→2, SegWit · 141 vB)
-🚀 Próximo bloco (~10 min)   2 sat/vB · 282 sats ≈ US$ 0,22 · R$ 1,21
-⏱ ~30 min   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
-🕐 ~1 hora   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
-🐢 Sem pressa   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
+🚀 Próximo bloco (~10 min)   2 sat/vB · 282 sats ≈ R$ 1,21
+⏱ ~30 min   1 sat/vB · 141 sats ≈ R$ 0,61
+🕐 ~1 hora   1 sat/vB · 141 sats ≈ R$ 0,61
+🐢 Sem pressa   1 sat/vB · 141 sats ≈ R$ 0,61
 ✅ Recomendado: 1 sat/vB — rede livre, não pague mais
 ─────
 Dispositivo ▸ · Uso da CPU ▸ · Uso da GPU ▸ · Tamanho da transação ▸ · Barra de menus mostra ▸
@@ -257,7 +258,7 @@ paying at least the minimum recommended fee and expresses that queue in blocks (
 | 🟠 Congestionada (congested) | 6–36 blocks (~6 h) | *~1 hora*, low fees may take hours |
 | 🔴 Muito congestionada (severe) | > 36 blocks | *~1 hora*, send only if urgent |
 
-**Cost of sending** = fee rate × transaction size, shown in sats, US$ and R$. Pick the size in
+**Cost of sending** = fee rate × transaction size, shown in sats and in your currency (*Moeda ▸*). Pick the size in
 *Tamanho da transação*: simple SegWit 1→2 (141 vB, default), Taproot 1→2 (154 vB) or a 5→1
 consolidation (382 vB).
 
@@ -265,8 +266,8 @@ consolidation (382 vB).
 *Uso da CPU* (10–100 % per thread), *Uso da GPU* (10–100 %). *Ver na pool…* opens your stats page on
 public-pool.io or solo.ckpool.org; *Ver no mempool.space…* opens the latest block.
 
-Data sources: mempool.space (blocks, mempool, fees, difficulty, USD price) and Coinbase, with
-Binance as a fallback, for BTC/BRL. Fees and mempool refresh every 30 s, the rest every 60 s.
+Data sources: mempool.space (blocks, mempool, fees, difficulty; price in USD, EUR, GBP, CAD,
+CHF, AUD, JPY) and Coinbase, with Binance as a fallback, for BTC/BRL. Fees and mempool refresh every 30 s, the rest every 60 s.
 
 While hidden, the app keeps mining normally.
 
@@ -358,6 +359,7 @@ You can edit it with the app closed. Missing fields use their default values.
 | `zoom` | `1.5` | Screen zoom (1.0–2.5). |
 | `tray_fields` | `["hashrate", "fee"]` | Menu bar fields (macOS): `hashrate`, `fee`, `last_block`, `best_diff`, `price`. |
 | `tx_vbytes` | `141` | Transaction size used for the "cost of sending" estimate, in vB. |
+| `currency` | from system language | `BRL`, `USD`, `EUR`, `GBP`, `CAD`, `CHF`, `AUD` or `JPY`. |
 
 To reset everything, quit the app and delete the file.
 
