@@ -232,8 +232,8 @@ Ajuste de dificuldade   39% · −2,66% em ~8,8 dias (1.228 blocos)
 BTC   R$ 430.462
 ─────
 REDE BITCOIN   🟢 Livre
-Fila pagante   ▕███░░░░░░░░░░░░░▏ 0,84 bloco · ~10 min para limpar
-Mempool   47,3 mil tx · 11,4 vMB (maioria abaixo de 1 sat/vB)
+Ocupação   ▕██░░░░░░░░░░░░░░▏ taxa p/ ~30 min: 1 sat/vB
+Mempool   47,3 mil tx · 11,4 vMB · fila pagante 0,8 bloco (maioria abaixo de 1 sat/vB)
 Próximo bloco   0,12 – 137 sat/vB · mediana 1,3 · 4,3 mil tx
 TAXA PARA ENVIAR AGORA   (Simples 1→2, SegWit · 141 vB)
 🚀 Próximo bloco (~10 min)   2 sat/vB · 282 sats ≈ R$ 1,21
@@ -246,16 +246,17 @@ Dispositivo ▸ · Uso da CPU ▸ · Uso da GPU ▸ · Tamanho da transação �
 Pausar mineração · Ver na pool… · Ver no mempool.space… · Ocultar janela · Sair
 ```
 
-**Ocupação da rede.** O tamanho total do mempool engana (boa parte pode ser de transações pagando
-menos que a taxa mínima, que não disputam espaço). O app conta só as transações que pagam pelo
-menos a taxa mínima recomendada e mede essa fila em blocos (1 bloco = 1 MvB, ~10 min):
+**Ocupação da rede.** Rede ocupada é transação cara, então o nível vem da taxa necessária para
+confirmar em cerca de 30 minutos (o *halfHourFee* do mempool.space). A barra mostra onde essa taxa
+está na escala abaixo. O tamanho do mempool e a *fila pagante* (transações pagando pelo menos a
+taxa mínima, em blocos de 1 MvB) aparecem só como informação extra.
 
-| Nível | Fila pagante | Taxa recomendada |
+| Nível | Taxa p/ ~30 min | Taxa recomendada |
 |---|---|---|
-| 🟢 Livre | ≤ 1 bloco | *Sem pressa*: pagar mais não adianta |
-| 🟡 Moderada | 1–6 blocos (~1 h) | *~30 min* |
-| 🟠 Congestionada | 6–36 blocos (~6 h) | *~1 hora*; taxa baixa pode demorar horas |
-| 🔴 Muito congestionada | > 36 blocos | *~1 hora*; envie só se for urgente |
+| 🟢 Livre | ≤ 2 sat/vB | *Sem pressa*: pagar mais não adianta |
+| 🟡 Moderada | 3–10 sat/vB | *~30 min* |
+| 🟠 Congestionada | 11–50 sat/vB | *~1 hora*; taxa baixa pode demorar horas |
+| 🔴 Muito congestionada | > 50 sat/vB | *~1 hora*; envie só se for urgente |
 
 **Custo para enviar** = taxa × tamanho da transação, em sats e na sua moeda (*Moeda ▸*). Escolha o tamanho em
 *Tamanho da transação*: simples SegWit 1→2 (141 vB, padrão), Taproot 1→2 (154 vB) ou consolidação

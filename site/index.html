@@ -270,9 +270,9 @@
           <li><div><b data-l="en">Your fields in the menu bar</b><b data-l="pt">Seus campos na barra de menus</b>
             <span data-l="en">Pick what shows next to the icon on macOS: hashrate, recommended fee, minutes since the last block, best difficulty, BTC price. On Windows and Linux the same summary is in the tooltip.</span>
             <span data-l="pt">Escolha o que aparece ao lado do ícone no macOS: hashrate, taxa recomendada, minutos desde o último bloco, melhor dificuldade, preço do BTC. No Windows e no Linux o mesmo resumo fica na dica do ícone.</span></div></li>
-          <li><div><b data-l="en">Real network occupancy</b><b data-l="pt">Ocupação real da rede</b>
-            <span data-l="en">The raw mempool size is misleading: most of it can be transactions paying less than the minimum fee. The app counts only the queue that actually competes for space, in blocks.</span>
-            <span data-l="pt">O tamanho bruto do mempool engana: boa parte pode ser de transações pagando menos que a taxa mínima. O app conta só a fila que realmente disputa espaço, em blocos.</span></div></li>
+          <li><div><b data-l="en">Network occupancy you can feel</b><b data-l="pt">Ocupação que faz sentido</b>
+            <span data-l="en">A busy network means an expensive transaction. The level comes from the fee needed to confirm in about 30 minutes, the same estimate mempool.space shows. Mempool size and the paying queue are shown as extra information.</span>
+            <span data-l="pt">Rede ocupada é transação cara. O nível vem da taxa necessária para confirmar em cerca de 30 minutos, a mesma estimativa do mempool.space. O tamanho do mempool e a fila pagante aparecem como informação extra.</span></div></li>
           <li><div><b data-l="en">The fee to pay now, and what it costs</b><b data-l="pt">A taxa para pagar agora, e quanto custa</b>
             <span data-l="en">Four tiers like mempool.space, the cost in sats and in your currency (8 to choose from) for a simple, Taproot or consolidation transaction, and a clear recommendation.</span>
             <span data-l="pt">Quatro níveis como no mempool.space, o custo em sats e na sua moeda (8 opções) para uma transação simples, Taproot ou de consolidação, e uma recomendação clara.</span></div></li>
@@ -282,14 +282,14 @@
           <table>
             <thead><tr>
               <th><span data-l="en">Occupancy</span><span data-l="pt">Ocupação</span></th>
-              <th><span data-l="en">Paying queue</span><span data-l="pt">Fila pagante</span></th>
+              <th><span data-l="en">Fee for ~30 min</span><span data-l="pt">Taxa p/ ~30 min</span></th>
               <th><span data-l="en">Recommendation</span><span data-l="pt">Recomendação</span></th>
             </tr></thead>
             <tbody>
-              <tr data-level="0"><td>🟢 <span data-l="en">Free</span><span data-l="pt">Livre</span></td><td>≤ 1 <span data-l="en">block</span><span data-l="pt">bloco</span></td><td><span data-l="en">"No rush" fee, paying more doesn't help</span><span data-l="pt">Taxa "sem pressa": pagar mais não adianta</span></td></tr>
-              <tr data-level="1"><td>🟡 <span data-l="en">Moderate</span><span data-l="pt">Moderada</span></td><td>1–6 <span data-l="en">blocks</span><span data-l="pt">blocos</span></td><td><span data-l="en">~30 min fee</span><span data-l="pt">Taxa de ~30 min</span></td></tr>
-              <tr data-level="2"><td>🟠 <span data-l="en">Congested</span><span data-l="pt">Congestionada</span></td><td>6–36 <span data-l="en">blocks</span><span data-l="pt">blocos</span></td><td><span data-l="en">~1 h fee; low fees may take hours</span><span data-l="pt">Taxa de ~1 h; taxa baixa pode demorar horas</span></td></tr>
-              <tr data-level="3"><td>🔴 <span data-l="en">Severe</span><span data-l="pt">Muito congestionada</span></td><td>&gt; 36 <span data-l="en">blocks</span><span data-l="pt">blocos</span></td><td><span data-l="en">Send only if urgent</span><span data-l="pt">Envie só se for urgente</span></td></tr>
+              <tr data-level="0"><td>🟢 <span data-l="en">Free</span><span data-l="pt">Livre</span></td><td>≤ 2 sat/vB</td><td><span data-l="en">"No rush" fee, paying more doesn't help</span><span data-l="pt">Taxa "sem pressa": pagar mais não adianta</span></td></tr>
+              <tr data-level="1"><td>🟡 <span data-l="en">Moderate</span><span data-l="pt">Moderada</span></td><td>3–10 sat/vB</td><td><span data-l="en">~30 min fee</span><span data-l="pt">Taxa de ~30 min</span></td></tr>
+              <tr data-level="2"><td>🟠 <span data-l="en">Congested</span><span data-l="pt">Congestionada</span></td><td>11–50 sat/vB</td><td><span data-l="en">~1 h fee; low fees may take hours</span><span data-l="pt">Taxa de ~1 h; taxa baixa pode demorar horas</span></td></tr>
+              <tr data-level="3"><td>🔴 <span data-l="en">Severe</span><span data-l="pt">Muito congestionada</span></td><td>&gt; 50 sat/vB</td><td><span data-l="en">Send only if urgent</span><span data-l="pt">Envie só se for urgente</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -314,7 +314,7 @@
             <div class="mrow"><b>BTC</b><span id="m-price">—</span></div>
             <div class="msep"></div>
             <div class="mrow strong"><b>REDE BITCOIN</b><span id="m-level">carregando…</span></div>
-            <div class="mrow"><b>Fila pagante</b><span><span class="mbar"><i id="m-bar"></i></span> <span id="m-queue">—</span></span></div>
+            <div class="mrow"><b>Ocupação</b><span><span class="mbar"><i id="m-bar"></i></span> <span id="m-queue">—</span></span></div>
             <div class="mrow"><b>Mempool</b><span id="m-mempool">—</span></div>
             <div class="mrow"><b>Próximo bloco</b><span id="m-next">—</span></div>
             <div class="mrow strong small">TAXA PARA ENVIAR AGORA <span class="dim">(Simples 1→2, SegWit · 141 vB)</span></div>

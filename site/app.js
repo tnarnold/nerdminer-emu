@@ -232,10 +232,11 @@
     { dot: "🟠", name: "Congestionada", color: "#ff9500", tier: 2, why: "taxa baixa pode demorar horas" },
     { dot: "🔴", name: "Muito congestionada", color: "#ff3b30", tier: 2, why: "rede cheia: envie só se for urgente" }
   ];
-  function level(blocks) { return blocks <= 1 ? 0 : blocks <= 6 ? 1 : blocks <= 36 ? 2 : 3; }
-  function barFrac(b) {
+  // Level from the ~30 min fee (sat/vB): ≤2 free, ≤10 moderate, ≤50 congested, >50 severe.
+  function level(fee) { var f = Math.round(fee * 10) / 10; return f <= 2.49 ? 0 : f <= 10.49 ? 1 : f <= 50.49 ? 2 : 3; }
+  function barFrac(f) {
     var seg = function (x, lo, hi) { return Math.min(1, Math.max(0, (x - lo) / (hi - lo))); };
-    return b <= 1 ? 0.25 * seg(b, 0, 1) : b <= 6 ? 0.25 + 0.25 * seg(b, 1, 6) : b <= 36 ? 0.5 + 0.25 * seg(b, 6, 36) : 0.75 + 0.25 * seg(b, 36, 216);
+    return f <= 2 ? 0.25 * seg(f, 0, 2) : f <= 10 ? 0.25 + 0.25 * seg(f, 2, 10) : f <= 50 ? 0.5 + 0.25 * seg(f, 10, 50) : 0.75 + 0.25 * seg(f, 50, 300);
   }
   function money(btc) {
     var brl = isPt() && net.brl;
@@ -262,16 +263,16 @@
     if (!st) return;
     var f = st.f, m = st.m, minFee = f.minimumFee || 1;
     var backlog = (m.fee_histogram || []).reduce(function (a, e) { return e[0] >= minFee ? a + e[1] : a; }, 0);
-    var blocks = backlog / 1e6, lv = LEVELS[level(blocks)];
+    var blocks = backlog / 1e6, half = f.halfHourFee, lv = LEVELS[level(half)];
     var tiers = [f.fastestFee, f.halfHourFee, f.hourFee, f.economyFee];
     var rec = tiers[lv.tier];
     $("mb-title").textContent = "82.4 MH/s · ⛽" + lv.dot + " " + feerate(rec) + " sat/vB";
     $("m-level").textContent = lv.dot + " " + lv.name;
-    $("m-bar").style.width = (barFrac(blocks) * 100).toFixed(1) + "%";
+    $("m-bar").style.width = (barFrac(half) * 100).toFixed(1) + "%";
     $("m-bar").style.background = lv.color;
-    $("m-queue").textContent = BR(blocks, blocks < 10 ? 2 : 0) + (blocks <= 1 ? " bloco" : " blocos") + " · ~" + dur(Math.max(1, Math.ceil(blocks)) * 600) + " para limpar";
+    $("m-queue").textContent = "taxa p/ ~30 min: " + feerate(half) + " sat/vB";
     var cheap = m.vsize - backlog;
-    $("m-mempool").textContent = brBig(m.count) + " tx · " + BR(m.vsize / 1e6, 1) + " vMB" + (cheap > m.vsize * 0.5 ? " (maioria abaixo de " + feerate(minFee) + " sat/vB)" : "");
+    $("m-mempool").textContent = brBig(m.count) + " tx · " + BR(m.vsize / 1e6, 1) + " vMB · fila pagante " + BR(blocks, blocks < 10 ? 1 : 0) + (blocks <= 1 ? " bloco" : " blocos") + (cheap > m.vsize * 0.5 ? " (maioria abaixo de " + feerate(minFee) + " sat/vB)" : "");
     if (st.mb && st.mb[0]) {
       var nb = st.mb[0], fr = nb.feeRange;
       $("m-next").textContent = feerate(fr[0]) + " – " + feerate(fr[fr.length - 1]) + " sat/vB · mediana " + feerate(nb.medianFee) + " · " + brBig(nb.nTx) + " tx";
@@ -294,7 +295,7 @@
     var per = net.diff * 4294967296, H = 8.24e7;
     $("m-chance").textContent = odds(-Math.expm1(-H * 86400 / per)) + " · bloco a cada ~" + dur(per / H);
     document.querySelectorAll(".levels tr[data-level]").forEach(function (tr) {
-      tr.classList.toggle("now", +tr.getAttribute("data-level") === level(blocks));
+      tr.classList.toggle("now", +tr.getAttribute("data-level") === level(half));
     });
   }
 

@@ -145,14 +145,19 @@ pub enum Congestion {
     Severe,
 }
 
+/// Upper fee (sat/vB, ~30 min target) of each level: free, moderate, congested; above is severe.
+pub const LEVEL_FEES: [f64; 3] = [2.0, 10.0, 50.0];
+
 impl Congestion {
-    /// From the backlog (in blocks) of transactions paying at least the minimum fee.
-    pub fn from_backlog(blocks: f64) -> Self {
-        if blocks <= 1.0 {
+    /// From the fee needed to confirm in ~30 min: "busy network" = expensive transaction.
+    pub fn from_fee(half_hour_fee: f64) -> Self {
+        // Rates like 2.4 sat/vB are shown as "2", so compare the rounded value.
+        let f = (half_hour_fee * 10.0).round() / 10.0;
+        if f <= LEVEL_FEES[0] + 0.49 {
             Congestion::Free
-        } else if blocks <= 6.0 {
+        } else if f <= LEVEL_FEES[1] + 0.49 {
             Congestion::Moderate
-        } else if blocks <= 36.0 {
+        } else if f <= LEVEL_FEES[2] + 0.49 {
             Congestion::Congested
         } else {
             Congestion::Severe
@@ -195,10 +200,15 @@ impl Tier {
     }
 }
 
+/// Network occupancy from the ~30 min fee; returns the level and that fee.
 pub fn congestion(n: &NetInfo) -> Option<(Congestion, f64)> {
-    let m = n.mempool.as_ref()?;
-    let blocks = m.backlog_vsize / BLOCK_VSIZE;
-    Some((Congestion::from_backlog(blocks), blocks))
+    let fee = n.fee_half_hour?;
+    Some((Congestion::from_fee(fee), fee))
+}
+
+/// Mempool transactions paying at least the minimum fee, in blocks (shown as information).
+pub fn backlog_blocks(n: &NetInfo) -> Option<f64> {
+    Some(n.mempool.as_ref()?.backlog_vsize / BLOCK_VSIZE)
 }
 
 /// Recommended tier for the current congestion and the advice shown with it.
@@ -211,17 +221,18 @@ pub fn recommendation(c: Congestion) -> (Tier, &'static str) {
     (tier, crate::i18n::t().recommendation[c as usize])
 }
 
-/// Fraction (0..1) for the congestion bar: each level gets a quarter of the bar.
-pub fn congestion_fraction(blocks: f64) -> f64 {
+/// Fraction (0..1) for the occupancy bar from the ~30 min fee: each level gets a quarter.
+pub fn congestion_fraction(fee: f64) -> f64 {
     let seg = |x: f64, lo: f64, hi: f64| ((x - lo) / (hi - lo)).clamp(0.0, 1.0);
-    if blocks <= 1.0 {
-        0.25 * seg(blocks, 0.0, 1.0)
-    } else if blocks <= 6.0 {
-        0.25 + 0.25 * seg(blocks, 1.0, 6.0)
-    } else if blocks <= 36.0 {
-        0.5 + 0.25 * seg(blocks, 6.0, 36.0)
+    let [a, b, c] = LEVEL_FEES;
+    if fee <= a {
+        0.25 * seg(fee, 0.0, a)
+    } else if fee <= b {
+        0.25 + 0.25 * seg(fee, a, b)
+    } else if fee <= c {
+        0.5 + 0.25 * seg(fee, b, c)
     } else {
-        0.75 + 0.25 * seg(blocks, 36.0, 216.0)
+        0.75 + 0.25 * seg(fee, c, 300.0)
     }
 }
 
@@ -239,10 +250,13 @@ mod tests {
 
     #[test]
     fn congestion_levels() {
-        assert_eq!(Congestion::from_backlog(0.84), Congestion::Free);
-        assert_eq!(Congestion::from_backlog(3.0), Congestion::Moderate);
-        assert_eq!(Congestion::from_backlog(20.0), Congestion::Congested);
-        assert_eq!(Congestion::from_backlog(80.0), Congestion::Severe);
+        assert_eq!(Congestion::from_fee(1.0), Congestion::Free);
+        assert_eq!(Congestion::from_fee(2.4), Congestion::Free);
+        assert_eq!(Congestion::from_fee(3.0), Congestion::Moderate);
+        assert_eq!(Congestion::from_fee(10.0), Congestion::Moderate);
+        assert_eq!(Congestion::from_fee(11.0), Congestion::Congested);
+        assert_eq!(Congestion::from_fee(50.0), Congestion::Congested);
+        assert_eq!(Congestion::from_fee(51.0), Congestion::Severe);
         assert_eq!(recommendation(Congestion::Free).0, Tier::Economy);
     }
 
@@ -250,10 +264,11 @@ mod tests {
     fn congestion_bar_is_monotonic() {
         let mut last = -1.0;
         for i in 0..400 {
-            let f = congestion_fraction(i as f64 * 0.75);
+            let f = congestion_fraction(i as f64);
             assert!(f >= last && (0.0..=1.0).contains(&f));
             last = f;
         }
-        assert!((congestion_fraction(1.0) - 0.25).abs() < 1e-9);
+        assert!((congestion_fraction(2.0) - 0.25).abs() < 1e-9);
+        assert!((congestion_fraction(50.0) - 0.75).abs() < 1e-9);
     }
 }

@@ -554,23 +554,24 @@ impl Tray {
 
         // ---- occupancy and fees
         match (netinfo::congestion(&n), &n.mempool) {
-            (Some((c, blocks)), Some(m)) => {
+            (Some((c, fee)), Some(m)) => {
                 self.set_row(Row::Network, format!("{}   {} {}", t.r_network, c.dot(), c.label()));
-                let clear = (blocks.ceil().max(1.0)) * 600.0;
                 self.set_row(
                     Row::Queue,
                     format!(
-                        "{}   {} {} {} · {}",
-                        t.r_queue,
-                        bar(netinfo::congestion_fraction(blocks), 16),
-                        fmt::num(blocks, if blocks < 10.0 { 2 } else { 0 }),
-                        if blocks <= 1.0 { t.block_one } else { t.block_many },
-                        fill(t.to_clear, &[&fmt::duration(clear)])
+                        "{}   {} {}",
+                        t.r_occupancy,
+                        bar(netinfo::congestion_fraction(fee), 16),
+                        fill(t.occ_fee, &[&fmt::feerate(fee)])
                     ),
                 );
-                let cheap = m.vsize - m.backlog_vsize;
-                let mut mp = format!("Mempool   {} tx · {} vMB", fmt::big(m.count as f64), fmt::num(m.vsize / 1e6, 1));
-                if cheap > m.vsize * 0.5 {
+                let blocks = netinfo::backlog_blocks(&n).unwrap_or(0.0);
+                let queue = fill(
+                    t.paying_queue,
+                    &[&fmt::num(blocks, if blocks < 10.0 { 1 } else { 0 }), &if blocks <= 1.0 { t.block_one } else { t.block_many }],
+                );
+                let mut mp = format!("Mempool   {} tx · {} vMB · {queue}", fmt::big(m.count as f64), fmt::num(m.vsize / 1e6, 1));
+                if m.vsize - m.backlog_vsize > m.vsize * 0.5 {
                     mp += " ";
                     mp += &fill(t.mostly_below, &[&fmt::feerate(n.fee_minimum.unwrap_or(1.0))]);
                 }

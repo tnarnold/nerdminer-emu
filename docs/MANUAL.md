@@ -234,8 +234,8 @@ Ajuste de dificuldade   39% · −2,66% em ~8,8 dias (1.228 blocos)
 BTC   R$ 430.462
 ─────
 REDE BITCOIN   🟢 Livre
-Fila pagante   ▕███░░░░░░░░░░░░░▏ 0,84 bloco · ~10 min para limpar
-Mempool   47,3 mil tx · 11,4 vMB (maioria abaixo de 1 sat/vB)
+Ocupação   ▕██░░░░░░░░░░░░░░▏ taxa p/ ~30 min: 1 sat/vB
+Mempool   47,3 mil tx · 11,4 vMB · fila pagante 0,8 bloco (maioria abaixo de 1 sat/vB)
 Próximo bloco   0,12 – 137 sat/vB · mediana 1,3 · 4,3 mil tx
 TAXA PARA ENVIAR AGORA   (Simples 1→2, SegWit · 141 vB)
 🚀 Próximo bloco (~10 min)   2 sat/vB · 282 sats ≈ R$ 1,21
@@ -248,17 +248,17 @@ Dispositivo ▸ · Uso da CPU ▸ · Uso da GPU ▸ · Tamanho da transação �
 Pausar mineração · Ver na pool… · Ver no mempool.space… · Ocultar janela · Sair
 ```
 
-**Network occupancy.** The total mempool size is misleading (most of it can be transactions paying
-less than the minimum fee, which don't compete for space). The app counts only the transactions
-paying at least the minimum recommended fee and expresses that queue in blocks (1 block = 1 MvB,
-~10 min):
+**Network occupancy.** A busy network means an expensive transaction, so the level comes from the
+fee needed to confirm in about 30 minutes (mempool.space's *halfHourFee*). The bar shows where
+that fee sits on the scale below. The mempool size and the *paying queue* (transactions paying at
+least the minimum fee, in blocks of 1 MvB) are shown as extra information only.
 
-| Level | Paying queue | Recommended tier |
+| Level | Fee for ~30 min | Recommended tier |
 |---|---|---|
-| 🟢 Livre (free) | ≤ 1 block | *Sem pressa* (no rush): paying more doesn't help |
-| 🟡 Moderada (moderate) | 1–6 blocks (~1 h) | *~30 min* |
-| 🟠 Congestionada (congested) | 6–36 blocks (~6 h) | *~1 hora*, low fees may take hours |
-| 🔴 Muito congestionada (severe) | > 36 blocks | *~1 hora*, send only if urgent |
+| 🟢 Livre (free) | ≤ 2 sat/vB | *Sem pressa* (no rush): paying more doesn't help |
+| 🟡 Moderada (moderate) | 3–10 sat/vB | *~30 min* |
+| 🟠 Congestionada (congested) | 11–50 sat/vB | *~1 hora*, low fees may take hours |
+| 🔴 Muito congestionada (severe) | > 50 sat/vB | *~1 hora*, send only if urgent |
 
 **Cost of sending** = fee rate × transaction size, shown in sats and in your currency (*Moeda ▸*). Pick the size in
 *Tamanho da transação*: simple SegWit 1→2 (141 vB, default), Taproot 1→2 (154 vB) or a 5→1
