@@ -8,6 +8,8 @@ your desktop, can hide in the system tray, and lets you control how much CPU and
 
 Runs on **macOS, Linux and Windows**.
 
+📖 **[User manual](docs/MANUAL.md)**: setup, every screen and setting, how it works, troubleshooting.
+
 ## Features
 
 - The 4 original screens (Miner, Clock, Global Stats and BTC Price), using the bitmaps, fonts and
@@ -103,7 +105,7 @@ out of the box.
 
 ## Configuration
 
-On first launch the ⚙ panel opens: enter your **BTC address** and click
+See the [user manual](docs/MANUAL.md#5-settings-) for every option. In short: on first launch the ⚙ panel opens: enter your **BTC address** and click
 *Salvar e reconectar* (save and reconnect). The configuration is stored at:
 
 - macOS: `~/Library/Application Support/nerdminer-emu/config.json`

@@ -9,6 +9,8 @@ CPU e GPU.
 
 Funciona em **macOS, Linux e Windows**.
 
+📖 **[Manual do usuário](docs/MANUAL.pt-BR.md)**: configuração, cada tela e opção, como funciona e solução de problemas.
+
 ## Recursos
 
 - As 4 telas originais (Miner, Clock, Global Stats e BTC Price) com os bitmaps, fontes e
@@ -100,7 +102,7 @@ A bandeja no Linux usa StatusNotifierItem (D-Bus, crate `ksni`). Em GNOME é pre
 
 ## Configuração
 
-Na primeira execução o painel ⚙ abre: informe seu **endereço BTC** e clique em
+Todas as opções estão no [manual do usuário](docs/MANUAL.pt-BR.md#5-configurações-). Resumindo: na primeira execução o painel ⚙ abre: informe seu **endereço BTC** e clique em
 *Salvar e reconectar*. A configuração fica em:
 
 - macOS: `~/Library/Application Support/nerdminer-emu/config.json`
