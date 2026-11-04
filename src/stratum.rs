@@ -1,6 +1,7 @@
 //! Minimal Stratum v1 client (solo pools such as public-pool.io / ckpool).
 
-use crate::state::Shared;
+use crate::i18n::{fill, t};
+use crate::state::{PoolStatus, Shared};
 use crate::work::{Job, stratum_prevhash};
 use serde_json::{Value, json};
 use std::collections::HashMap;
@@ -20,14 +21,14 @@ pub fn spawn(shared: Arc<Shared>) {
                 let generation = shared.config_gen.load(Acquire);
                 let cfg = shared.config.read().unwrap().clone();
                 if cfg.btc_address.trim().is_empty() {
-                    shared.set_status("Configure seu endereço BTC");
+                    shared.set_status(PoolStatus::NoAddress);
                     shared.set_connected(false);
                     std::thread::sleep(Duration::from_millis(500));
                     continue;
                 }
                 if let Err(e) = session(&shared, generation) {
                     shared.log(format!("Pool: {e}"));
-                    shared.set_status(format!("Erro: {e}"));
+                    shared.set_status(PoolStatus::Error(e));
                 }
                 shared.set_connected(false);
                 *shared.job.write().unwrap() = None;
@@ -47,12 +48,12 @@ pub fn spawn(shared: Arc<Shared>) {
 fn session(shared: &Arc<Shared>, generation: u64) -> Result<(), String> {
     let cfg = shared.config.read().unwrap().clone();
     let addr = format!("{}:{}", cfg.pool_host.trim(), cfg.pool_port);
-    shared.set_status(format!("Conectando a {addr}…"));
+    shared.set_status(PoolStatus::Connecting(addr.to_string()));
     let sock = addr
         .to_socket_addrs()
         .map_err(|e| format!("DNS {addr}: {e}"))?
         .next()
-        .ok_or("endereço inválido")?;
+        .ok_or_else(|| t().err_bad_address.to_string())?;
     let stream = TcpStream::connect_timeout(&sock, Duration::from_secs(10)).map_err(|e| e.to_string())?;
     stream.set_read_timeout(Some(Duration::from_millis(200))).ok();
     stream.set_nodelay(true).ok();
@@ -81,7 +82,7 @@ fn session(shared: &Arc<Shared>, generation: u64) -> Result<(), String> {
 
     loop {
         if shared.config_gen.load(Acquire) != generation {
-            return Err("configuração alterada, reconectando".into());
+            return Err(t().err_config_changed.into());
         }
 
         // Forward found shares.
@@ -97,16 +98,16 @@ fn session(shared: &Arc<Shared>, generation: u64) -> Result<(), String> {
                 user, sub.job_id, hex::encode(&sub.extranonce2),
                 format!("{:08x}", sub.ntime), format!("{:08x}", sub.nonce)
             ]}))?;
-            shared.log(format!("Share enviado (dif {})", crate::fmt::diff(sub.diff)));
+            shared.log(fill(t().log_share_sent, &[&crate::fmt::diff(sub.diff)]));
         }
 
         line.clear();
         match reader.read_line(&mut line) {
-            Ok(0) => return Err("conexão encerrada pela pool".into()),
+            Ok(0) => return Err(t().err_closed.into()),
             Ok(_) => {}
             Err(e) if matches!(e.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut) => {
                 if last_rx.elapsed() > Duration::from_secs(300) {
-                    return Err("sem resposta da pool".into());
+                    return Err(t().err_no_response.into());
                 }
                 continue;
             }
@@ -125,7 +126,7 @@ fn session(shared: &Arc<Shared>, generation: u64) -> Result<(), String> {
                     if let Some(d) = params.get(0).and_then(Value::as_f64) {
                         pool_diff = d;
                         shared.pool_diff.set(d);
-                        shared.log(format!("Dificuldade da pool: {}", crate::fmt::diff(d)));
+                        shared.log(fill(t().log_pool_diff, &[&crate::fmt::diff(d)]));
                     }
                 }
                 "mining.notify" => {
@@ -147,7 +148,7 @@ fn session(shared: &Arc<Shared>, generation: u64) -> Result<(), String> {
                         en2_size = n as usize;
                     }
                 }
-                "client.reconnect" => return Err("pool pediu reconexão".into()),
+                "client.reconnect" => return Err(t().err_reconnect.into()),
                 _ => {}
             }
             continue;
@@ -169,10 +170,10 @@ fn session(shared: &Arc<Shared>, generation: u64) -> Result<(), String> {
             2 => {
                 if result.as_bool() == Some(true) {
                     shared.set_connected(true);
-                    shared.set_status(format!("Conectado: {}", cfg.pool_host));
-                    shared.log(format!("Autorizado como {user}"));
+                    shared.set_status(PoolStatus::Connected(cfg.pool_host.clone()));
+                    shared.log(fill(t().log_authorized, &[&user]));
                 } else {
-                    return Err(format!("autorização recusada: {error}"));
+                    return Err(fill(t().err_auth, &[&error]));
                 }
             }
             3 => {}
@@ -180,10 +181,10 @@ fn session(shared: &Arc<Shared>, generation: u64) -> Result<(), String> {
                 if let Some(d) = pending.remove(&id) {
                     if result.as_bool() == Some(true) {
                         shared.accepted.fetch_add(1, Relaxed);
-                        shared.log(format!("Share ACEITO (dif {})", crate::fmt::diff(d)));
+                        shared.log(fill(t().log_share_ok, &[&crate::fmt::diff(d)]));
                     } else {
                         shared.rejected.fetch_add(1, Relaxed);
-                        shared.log(format!("Share rejeitado: {error}"));
+                        shared.log(fill(t().log_share_rejected, &[&error]));
                     }
                 }
             }

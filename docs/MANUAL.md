@@ -5,8 +5,9 @@
 This manual explains how to set up the emulator, what every screen and setting does, and how it
 works under the hood. For installation see the [README](../README.md#install).
 
-> The app's interface is currently in Portuguese. In this manual each label is shown as it appears
-> in the app, followed by its English meaning, e.g. **Salvar e reconectar** (save and reconnect).
+> The app speaks **English and Portuguese** and follows your system language by default (change it
+> in ⚙ → Window → **Language**, or in the tray's **Language ▸**). This manual was written with the
+> Portuguese labels, each followed by its English text, e.g. **Salvar e reconectar** (Save and reconnect).
 
 - [1. What it is (and what to expect)](#1-what-it-is-and-what-to-expect)
 - [2. Quick start](#2-quick-start)
@@ -189,7 +190,8 @@ Mining at high usage for long periods produces heat. Laptops may throttle or get
 |---|---|
 | **Iniciar escondido na bandeja** (start hidden in tray) | The app starts in the tray, without showing the window. Useful together with starting at login. |
 | **Zoom da tela** (screen zoom) | Screen size: 1x (320×170, like the device), 1.5x, 2x or 2.5x. |
-| **Moeda** (currency) | Currency for the BTC price (screens and tray) and fee costs: BRL, USD, EUR, GBP, CAD, CHF, AUD or JPY. Default: from the system language (Portuguese → BRL). Also in the tray: *Moeda ▸*. |
+| **Moeda** (currency) | Currency for the BTC price (screens and tray) and fee costs: BRL, USD, EUR, GBP, CAD, CHF, AUD or JPY. Default: from the system language/region (Portuguese → BRL). Also in the tray: *Moeda ▸*. |
+| **Idioma** (language) | Interface language: Automatic (system), Português (Brasil) or English. Applies immediately, including the tray menu. Also in the tray: *Idioma ▸*. |
 
 ### Log
 
@@ -360,6 +362,7 @@ You can edit it with the app closed. Missing fields use their default values.
 | `tray_fields` | `["hashrate", "fee"]` | Menu bar fields (macOS): `hashrate`, `fee`, `last_block`, `best_diff`, `price`. |
 | `tx_vbytes` | `141` | Transaction size used for the "cost of sending" estimate, in vB. |
 | `currency` | from system language | `BRL`, `USD`, `EUR`, `GBP`, `CAD`, `CHF`, `AUD` or `JPY`. |
+| `language` | `"auto"` | `"auto"` (system), `"pt-BR"` or `"en"`. |
 
 To reset everything, quit the app and delete the file.
 

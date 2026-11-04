@@ -94,7 +94,7 @@ pub fn spawn(shared: Arc<Shared>) {
                 {
                     let mut n = shared.net.lock().unwrap();
                     if let Some(p) = &prices {
-                        for (code, _, _) in crate::currency::CURRENCIES {
+                        for (code, _) in crate::currency::CURRENCIES {
                             if let Some(v) = p[code].as_f64() {
                                 n.prices.insert(code.to_string(), v);
                             }
@@ -167,12 +167,7 @@ impl Congestion {
         }
     }
     pub fn label(self) -> &'static str {
-        match self {
-            Congestion::Free => "Livre",
-            Congestion::Moderate => "Moderada",
-            Congestion::Congested => "Congestionada",
-            Congestion::Severe => "Muito congestionada",
-        }
+        crate::i18n::t().congestion[self as usize]
     }
 }
 
@@ -188,12 +183,7 @@ pub enum Tier {
 impl Tier {
     pub const ALL: [Tier; 4] = [Tier::NextBlock, Tier::HalfHour, Tier::Hour, Tier::Economy];
     pub fn label(self) -> &'static str {
-        match self {
-            Tier::NextBlock => "🚀 Próximo bloco (~10 min)",
-            Tier::HalfHour => "⏱ ~30 min",
-            Tier::Hour => "🕐 ~1 hora",
-            Tier::Economy => "🐢 Sem pressa",
-        }
+        crate::i18n::t().tiers[self as usize]
     }
     pub fn fee(self, n: &NetInfo) -> Option<f64> {
         match self {
@@ -213,12 +203,12 @@ pub fn congestion(n: &NetInfo) -> Option<(Congestion, f64)> {
 
 /// Recommended tier for the current congestion and the advice shown with it.
 pub fn recommendation(c: Congestion) -> (Tier, &'static str) {
-    match c {
-        Congestion::Free => (Tier::Economy, "rede livre, não pague mais"),
-        Congestion::Moderate => (Tier::HalfHour, "deve confirmar em ~30 min"),
-        Congestion::Congested => (Tier::Hour, "taxa baixa pode demorar horas"),
-        Congestion::Severe => (Tier::Hour, "rede cheia: envie só se for urgente"),
-    }
+    let tier = match c {
+        Congestion::Free => Tier::Economy,
+        Congestion::Moderate => Tier::HalfHour,
+        Congestion::Congested | Congestion::Severe => Tier::Hour,
+    };
+    (tier, crate::i18n::t().recommendation[c as usize])
 }
 
 /// Fraction (0..1) for the congestion bar: each level gets a quarter of the bar.

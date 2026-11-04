@@ -5,6 +5,7 @@ mod config;
 mod currency;
 mod fmt;
 mod gpu;
+mod i18n;
 mod miner;
 mod netinfo;
 mod screens;
@@ -17,6 +18,7 @@ use eframe::egui;
 
 fn main() -> eframe::Result {
     let cfg = config::Config::load();
+    i18n::set(i18n::resolve(&cfg.language));
     let shared = state::Shared::new(cfg.clone());
 
     stratum::spawn(shared.clone());

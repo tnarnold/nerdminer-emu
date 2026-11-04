@@ -30,6 +30,8 @@ pub struct Config {
     pub tx_vbytes: u32,
     /// Display currency for the BTC price and fee costs (ISO code, see `currency`).
     pub currency: String,
+    /// UI language: "auto" (system), or a code from `i18n::Lang` ("pt-BR", "en").
+    pub language: String,
 }
 
 impl Default for Config {
@@ -54,6 +56,7 @@ impl Default for Config {
             tray_fields: vec!["hashrate".into(), "fee".into()],
             tx_vbytes: 141,
             currency: crate::currency::default_for_system(),
+            language: "auto".into(),
         }
     }
 }

@@ -26,6 +26,7 @@ Funciona em **macOS, Linux e Windows**.
 - Janela sem bordas, opção "sempre no topo", zoom 1x–2.5x, iniciar escondido.
 - Logotipo Go BTC discreto no canto superior esquerdo; clicar abre https://gobtc.com.br.
 - Preço do BTC na sua moeda (BRL, USD, EUR, GBP, CAD, CHF, AUD, JPY).
+- Interface em **português e inglês**, seguindo o idioma do sistema (dá para trocar no app). Adicionar um idioma é um arquivo só: `src/i18n.rs`.
 - Dados de rede (preço, altura, hashrate global, taxas, halving) do mempool.space.
 
 > Mineração solo com CPU/GPU é uma loteria: a chance de achar um bloco é minúscula.
@@ -148,7 +149,9 @@ nonce real do bloco gênese.
 | `src/gpu.rs`, `src/sha256d.wgsl` | minerador GPU (wgpu) |
 | `src/screens.rs` | telas do NerdMiner (bitmaps, fontes, coordenadas) |
 | `src/app.rs` | janela, barra de ferramentas e configurações |
-| `src/tray.rs` | bandeja do sistema |
+| `src/tray.rs` | bandeja do sistema (bolinha de estado, campos da barra de menus, painel de rede/taxas) |
+| `src/i18n.rs` | textos da interface (português, inglês) |
+| `src/currency.rs` | moedas de exibição |
 | `src/netinfo.rs` | dados da rede via mempool.space |
 
 ## Créditos

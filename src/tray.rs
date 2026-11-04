@@ -3,33 +3,33 @@
 //! The icon carries a status dot (mining / connecting / offline / paused); on macOS the
 //! menu bar also shows the fields picked by the user. The menu is a native, text-only
 //! dashboard: mining stats, network occupancy with the fee to use right now, and quick
-//! controls (device, CPU/GPU usage, transaction size, menu bar fields).
+//! controls (device, CPU/GPU usage, transaction size, currency, language, menu bar fields).
+//!
+//! All texts come from `i18n`; when the language changes the menu is rebuilt.
 
 use crate::config::Config;
 use crate::fmt;
+use crate::i18n::{self, Lang, fill, t};
 use crate::netinfo::{self, Tier};
-use crate::state::Shared;
+use crate::state::{PoolStatus, Shared};
 use std::sync::Arc;
 use std::sync::atomic::Ordering::*;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tray_icon::menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder, TrayIconEvent};
 
 pub const CPU_STEPS: [u32; 5] = [10, 25, 50, 75, 100];
 pub const GPU_STEPS: [u32; 5] = [10, 30, 50, 75, 100];
-/// (vB, label) — 1 input / 2 outputs P2WPKH, P2TR, and a 5→1 P2WPKH consolidation.
-pub const TX_SIZES: [(u32, &str); 3] = [
-    (141, "Simples 1→2, SegWit · 141 vB"),
-    (154, "Taproot 1→2 · 154 vB"),
-    (382, "Consolidação 5→1 · 382 vB"),
-];
-pub const FIELDS: [(&str, &str); 5] = [
-    ("hashrate", "Hashrate"),
-    ("fee", "Taxa recomendada + ocupação"),
-    ("last_block", "Tempo desde o último bloco"),
-    ("best_diff", "Melhor dificuldade"),
-    ("price", "Preço do BTC"),
-];
+/// vB of a 1-in/2-out P2WPKH, a 1-in/2-out P2TR and a 5→1 P2WPKH consolidation
+/// (labels in `i18n::Tr::tx_labels`).
+pub const TX_SIZES: [u32; 3] = [141, 154, 382];
+/// Menu bar fields (labels in `i18n::Tr::field_labels`).
+pub const FIELDS: [&str; 5] = ["hashrate", "fee", "last_block", "best_diff", "price"];
+
+/// macOS re-lays out the status item (and closes an open tooltip) whenever the title or
+/// tooltip is set, so these are refreshed sparingly.
+const TITLE_EVERY: Duration = Duration::from_secs(5);
+const TOOLTIP_EVERY: Duration = Duration::from_secs(60);
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Device {
@@ -47,6 +47,8 @@ pub enum TrayCmd {
     GpuUsage(u32),
     TxSize(u32),
     Currency(&'static str),
+    /// "auto" or a `Lang` code.
+    Language(&'static str),
     Field(&'static str),
     OpenPool,
     OpenMempool,
@@ -69,7 +71,9 @@ fn parse_cmd(id: &str) -> Option<TrayCmd> {
         "gpu" => TrayCmd::GpuUsage(arg.parse().ok()?),
         "tx" => TrayCmd::TxSize(arg.parse().ok()?),
         "cur" => TrayCmd::Currency(crate::currency::CURRENCIES.iter().find(|c| c.0 == arg)?.0),
-        "field" => TrayCmd::Field(FIELDS.iter().find(|(k, _)| *k == arg)?.0),
+        "lang" if arg == "auto" => TrayCmd::Language("auto"),
+        "lang" => TrayCmd::Language(Lang::ALL.into_iter().find(|l| l.code() == arg)?.code()),
+        "field" => TrayCmd::Field(FIELDS.iter().find(|k| **k == arg)?),
         _ => return None,
     })
 }
@@ -92,11 +96,12 @@ impl Status {
         }
     }
     fn label(self) -> &'static str {
+        let t = t();
         match self {
-            Status::Mining => "Minerando",
-            Status::Connecting => "Conectando",
-            Status::Offline => "Sem pool",
-            Status::Paused => "Pausado",
+            Status::Mining => t.st_mining,
+            Status::Connecting => t.st_connecting,
+            Status::Offline => t.st_offline,
+            Status::Paused => t.st_paused,
         }
     }
 }
@@ -126,22 +131,31 @@ enum Row {
 }
 const ROWS: usize = Row::Recommended as usize + 1;
 
-pub struct Tray {
-    pub icon: TrayIcon,
-    pub toggle_item: MenuItem,
+/// Menu items that are updated after the menu is built (rebuilt on language change).
+struct Parts {
+    toggle_item: MenuItem,
     pause_item: MenuItem,
     pool_item: MenuItem,
     rows: Vec<MenuItem>,
-    texts: Vec<String>,
     dev_items: Vec<(Device, CheckMenuItem)>,
     cpu_items: Vec<(u32, CheckMenuItem)>,
     gpu_items: Vec<(u32, CheckMenuItem)>,
     tx_items: Vec<(u32, CheckMenuItem)>,
     cur_items: Vec<(&'static str, CheckMenuItem)>,
+    lang_items: Vec<(&'static str, CheckMenuItem)>,
     field_items: Vec<(&'static str, CheckMenuItem)>,
+}
+
+pub struct Tray {
+    icon: TrayIcon,
+    parts: Parts,
+    texts: Vec<String>,
+    lang: Lang,
+    window_visible: bool,
     last_status: Option<Status>,
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
-    last_title: String,
+    last_title: (String, Option<Instant>),
+    last_tip: (String, Option<Instant>),
 }
 
 /// RGBA icon: orange circle with a dark "chip".
@@ -204,7 +218,7 @@ fn now_unix() -> u64 {
 fn field_text(key: &str, s: &Shared, n: &crate::state::NetInfo, paused: bool) -> Option<String> {
     match key {
         "hashrate" => Some(if paused {
-            "Pausado".into()
+            t().st_paused.into()
         } else {
             let (v, u) = fmt::hashrate(s.hashrate());
             format!("{v} {u}")
@@ -265,73 +279,90 @@ pub fn open_url(url: &str) {
     let _ = r;
 }
 
+fn build_menu() -> Result<(Menu, Parts), String> {
+    let t = t();
+    let e = |e: tray_icon::menu::Error| e.to_string();
+    let menu = Menu::new();
+    let rows: Vec<MenuItem> = (0..ROWS).map(|_| MenuItem::new("…", false, None)).collect();
+    let sep = PredefinedMenuItem::separator;
+    let groups: [&[Row]; 4] = [
+        &[Row::Status],
+        &[Row::Hashrate, Row::BestDiff, Row::Shares, Row::Chance],
+        &[Row::Block, Row::Difficulty, Row::Price],
+        &[
+            Row::Network, Row::Queue, Row::Mempool, Row::NextBlock, Row::FeeTitle,
+            Row::Fee0, Row::Fee1, Row::Fee2, Row::Fee3, Row::Recommended,
+        ],
+    ];
+    for g in groups {
+        for r in g {
+            menu.append(&rows[*r as usize]).map_err(e)?;
+        }
+        menu.append(&sep()).map_err(e)?;
+    }
+
+    let check = |id: String, text: &str| CheckMenuItem::with_id(id, text, true, false, None);
+    let dev_items: Vec<_> = [(Device::Cpu, "cpu", "CPU"), (Device::Gpu, "gpu", "GPU"), (Device::Both, "both", "CPU + GPU")]
+        .into_iter()
+        .map(|(d, k, txt)| (d, check(format!("dev:{k}"), txt)))
+        .collect();
+    let cpu_items: Vec<_> = CPU_STEPS.iter().map(|&p| (p, check(format!("cpu:{p}"), &fill(t.cpu_step, &[&p])))).collect();
+    let gpu_items: Vec<_> = GPU_STEPS.iter().map(|&p| (p, check(format!("gpu:{p}"), &format!("{p}%")))).collect();
+    let tx_items: Vec<_> = TX_SIZES.iter().zip(t.tx_labels).map(|(&vb, l)| (vb, check(format!("tx:{vb}"), l))).collect();
+    let cur_items: Vec<_> = crate::currency::CURRENCIES
+        .iter()
+        .map(|&(c, sym)| (c, check(format!("cur:{c}"), &format!("{} ({sym})", crate::currency::name(c)))))
+        .collect();
+    let mut lang_items = vec![("auto", check("lang:auto".into(), t.language_auto))];
+    lang_items.extend(Lang::ALL.into_iter().map(|l| (l.code(), check(format!("lang:{}", l.code()), l.native_name()))));
+    let field_items: Vec<_> = FIELDS.iter().zip(t.field_labels).map(|(&k, l)| (k, check(format!("field:{k}"), l))).collect();
+
+    let sub = |title: &str, items: Vec<&CheckMenuItem>| -> Result<Submenu, String> {
+        let s = Submenu::new(title, true);
+        for i in items {
+            s.append(i).map_err(e)?;
+        }
+        Ok(s)
+    };
+    menu.append(&sub(t.sub_device, dev_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
+    menu.append(&sub(t.sub_cpu, cpu_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
+    menu.append(&sub(t.sub_gpu, gpu_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
+    menu.append(&sub(t.sub_tx, tx_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
+    menu.append(&sub(t.sub_currency, cur_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
+    menu.append(&sub(t.sub_language, lang_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
+    // Only macOS shows text next to the tray icon.
+    if cfg!(target_os = "macos") {
+        menu.append(&sub(t.sub_fields, field_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
+    }
+    menu.append(&sep()).map_err(e)?;
+
+    let pause_item = MenuItem::with_id("pause", t.pause_mining, true, None);
+    let pool_item = MenuItem::with_id("pool", t.open_pool, true, None);
+    let mempool_item = MenuItem::with_id("mempool", t.open_mempool, true, None);
+    let toggle_item = MenuItem::with_id("toggle", t.hide_window, true, None);
+    let quit_item = MenuItem::with_id("quit", t.quit, true, None);
+    for i in [&pause_item, &pool_item, &mempool_item, &toggle_item] {
+        menu.append(i).map_err(e)?;
+    }
+    menu.append(&sep()).map_err(e)?;
+    menu.append(&quit_item).map_err(e)?;
+
+    Ok((
+        menu,
+        Parts { toggle_item, pause_item, pool_item, rows, dev_items, cpu_items, gpu_items, tx_items, cur_items, lang_items, field_items },
+    ))
+}
+
+/// True when `last` was never set or is older than `every`.
+fn due(last: Option<Instant>, every: Duration) -> bool {
+    last.is_none_or(|t| t.elapsed() >= every)
+}
+
 impl Tray {
     /// Must be called on the main thread after the event loop has started.
     pub fn new(on_cmd: impl Fn(TrayCmd) + Send + Sync + 'static) -> Result<Tray, String> {
-        let e = |e: tray_icon::menu::Error| e.to_string();
-        let menu = Menu::new();
-        let rows: Vec<MenuItem> = (0..ROWS).map(|_| MenuItem::new("…", false, None)).collect();
-        let sep = PredefinedMenuItem::separator;
-        let groups: [&[Row]; 4] = [
-            &[Row::Status],
-            &[Row::Hashrate, Row::BestDiff, Row::Shares, Row::Chance],
-            &[Row::Block, Row::Difficulty, Row::Price],
-            &[
-                Row::Network, Row::Queue, Row::Mempool, Row::NextBlock, Row::FeeTitle,
-                Row::Fee0, Row::Fee1, Row::Fee2, Row::Fee3, Row::Recommended,
-            ],
-        ];
-        for g in groups {
-            for r in g {
-                menu.append(&rows[*r as usize]).map_err(e)?;
-            }
-            menu.append(&sep()).map_err(e)?;
-        }
-
-        let check = |id: String, text: &str, on: bool| CheckMenuItem::with_id(id, text, true, on, None);
-        let dev_items: Vec<(Device, CheckMenuItem)> = [(Device::Cpu, "cpu", "CPU"), (Device::Gpu, "gpu", "GPU"), (Device::Both, "both", "CPU + GPU")]
-            .into_iter()
-            .map(|(d, k, t)| (d, check(format!("dev:{k}"), t, false)))
-            .collect();
-        let cpu_items: Vec<_> = CPU_STEPS.iter().map(|&p| (p, check(format!("cpu:{p}"), &format!("{p}% por thread"), false))).collect();
-        let gpu_items: Vec<_> = GPU_STEPS.iter().map(|&p| (p, check(format!("gpu:{p}"), &format!("{p}%"), false))).collect();
-        let tx_items: Vec<_> = TX_SIZES.iter().map(|&(vb, t)| (vb, check(format!("tx:{vb}"), t, false))).collect();
-        let cur_items: Vec<_> = crate::currency::CURRENCIES
-            .iter()
-            .map(|&(c, sym, name)| (c, check(format!("cur:{c}"), &format!("{name} ({sym})"), false)))
-            .collect();
-        let field_items: Vec<_> = FIELDS.iter().map(|&(k, t)| (k, check(format!("field:{k}"), t, false))).collect();
-
-        let sub = |title: &str, items: Vec<&CheckMenuItem>| -> Result<Submenu, String> {
-            let s = Submenu::new(title, true);
-            for i in items {
-                s.append(i).map_err(e)?;
-            }
-            Ok(s)
-        };
-        menu.append(&sub("Dispositivo", dev_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
-        menu.append(&sub("Uso da CPU", cpu_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
-        menu.append(&sub("Uso da GPU", gpu_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
-        menu.append(&sub("Tamanho da transação", tx_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
-        menu.append(&sub("Moeda", cur_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
-        // Only macOS shows text next to the tray icon.
-        if cfg!(target_os = "macos") {
-            menu.append(&sub("Barra de menus mostra", field_items.iter().map(|x| &x.1).collect())?).map_err(e)?;
-        }
-        menu.append(&sep()).map_err(e)?;
-
-        let pause_item = MenuItem::with_id("pause", "Pausar mineração", true, None);
-        let pool_item = MenuItem::with_id("pool", "Ver na pool…", true, None);
-        let mempool_item = MenuItem::with_id("mempool", "Ver no mempool.space…", true, None);
-        let toggle_item = MenuItem::with_id("toggle", "Ocultar janela", true, None);
-        let quit_item = MenuItem::with_id("quit", "Sair", true, None);
-        for i in [&pause_item, &pool_item, &mempool_item, &toggle_item] {
-            menu.append(i).map_err(e)?;
-        }
-        menu.append(&sep()).map_err(e)?;
-        menu.append(&quit_item).map_err(e)?;
-
-        let icon = make_icon(Status::Connecting).ok_or("ícone inválido")?;
+        let (menu, parts) = build_menu()?;
+        let icon = make_icon(Status::Connecting).ok_or("invalid icon")?;
         let tray = TrayIconBuilder::new()
             .with_menu(Box::new(menu))
             .with_tooltip("NerdMiner Emulator")
@@ -355,78 +386,109 @@ impl Tray {
 
         Ok(Tray {
             icon: tray,
-            toggle_item,
-            pause_item,
-            pool_item,
-            rows,
+            parts,
             texts: vec![String::new(); ROWS],
-            dev_items,
-            cpu_items,
-            gpu_items,
-            tx_items,
-            cur_items,
-            field_items,
+            lang: i18n::lang(),
+            window_visible: true,
             last_status: None,
-            last_title: String::new(),
+            last_title: (String::new(), None),
+            last_tip: (String::new(), None),
         })
+    }
+
+    pub fn set_window_visible(&mut self, v: bool) {
+        self.window_visible = v;
+        self.parts.toggle_item.set_text(if v { t().hide_window } else { t().show_window });
     }
 
     fn set_row(&mut self, r: Row, text: String) {
         let i = r as usize;
         if self.texts[i] != text {
-            self.rows[i].set_text(&text);
+            self.parts.rows[i].set_text(&text);
             self.texts[i] = text;
         }
     }
 
     /// Refresh icon, title, tooltip and menu texts. Call about once per second.
     pub fn refresh(&mut self, s: &Shared) {
+        // ---- language change: rebuild the whole menu
+        if i18n::lang() != self.lang {
+            if let Ok((menu, parts)) = build_menu() {
+                self.icon.set_menu(Some(Box::new(menu)));
+                self.parts = parts;
+                self.texts = vec![String::new(); ROWS];
+                self.lang = i18n::lang();
+                self.last_title.1 = None;
+                self.last_tip.1 = None;
+                let v = self.window_visible;
+                self.set_window_visible(v);
+            }
+        }
+        let t = t();
         let cfg = s.config.read().unwrap().clone();
         let n = s.net.lock().unwrap().clone();
+        let pool = s.pool_status.lock().unwrap().clone();
         let paused = s.paused.load(Relaxed);
-        let connected = s.pool_connected.load(Relaxed);
         let status = if paused {
             Status::Paused
-        } else if connected {
+        } else if s.pool_connected.load(Relaxed) {
             Status::Mining
-        } else if cfg.btc_address.trim().is_empty() || s.pool_status.lock().unwrap().starts_with("Erro") {
+        } else if matches!(pool, PoolStatus::NoAddress | PoolStatus::Error(_)) {
             Status::Offline
         } else {
             Status::Connecting
         };
-        if self.last_status != Some(status) {
+        let status_changed = self.last_status != Some(status);
+        if status_changed {
             let _ = self.icon.set_icon(make_icon(status));
             self.last_status = Some(status);
         }
 
-        // ---- menu bar title (macOS) and tooltip
+        // ---- menu bar title (macOS): at most every TITLE_EVERY unless the status changed
         let parts: Vec<String> = cfg.tray_fields.iter().filter_map(|k| field_text(k, s, &n, paused)).collect();
         #[cfg(target_os = "macos")]
         {
             let title = if parts.is_empty() { String::new() } else { format!(" {}", parts.join(" · ")) };
-            if title != self.last_title {
+            if title != self.last_title.0 && (status_changed || due(self.last_title.1, TITLE_EVERY)) {
                 self.icon.set_title(Some(&title));
-                self.last_title = title;
+                self.last_title = (title, Some(Instant::now()));
             }
         }
+
+        // ---- tooltip: at most every TOOLTIP_EVERY unless the status changed
         let hr = field_text("hashrate", s, &n, paused).unwrap_or_default();
         let mut tip = format!("NerdMiner — {}\n{hr} · best {}", status.label().to_lowercase(), fmt::diff(s.best_diff.get()));
         if let Some(b) = &n.last_block {
-            tip += &format!("\nBloco #{} · há {}", b.height, fmt::duration(now_unix().saturating_sub(b.time) as f64));
+            tip += "\n";
+            tip += &fill(t.tip_block, &[&b.height, &fmt::duration(now_unix().saturating_sub(b.time) as f64)]);
         }
-        if let (Some((c, _)), Some(fee)) = (netinfo::congestion(&n), netinfo::congestion(&n).and_then(|(c, _)| netinfo::recommendation(c).0.fee(&n))) {
-            let cost = money(fee * cfg.tx_vbytes as f64, &n, &cfg.currency);
-            tip += &format!("\nRede {} {} · enviar: {} sat/vB {}", c.dot(), c.label().to_lowercase(), fmt::feerate(fee), cost);
+        if let Some((c, _)) = netinfo::congestion(&n) {
+            if let Some(fee) = netinfo::recommendation(c).0.fee(&n) {
+                let cost = money(fee * cfg.tx_vbytes as f64, &n, &cfg.currency);
+                tip += "\n";
+                tip += &fill(t.tip_network, &[&c.dot(), &c.label().to_lowercase(), &fmt::feerate(fee), &cost]);
+            }
         }
         if cfg!(target_os = "windows") && tip.chars().count() > 127 {
             tip = tip.chars().take(127).collect(); // Windows tooltip limit
         }
-        let _ = self.icon.set_tooltip(Some(tip.as_str()));
+        if tip != self.last_tip.0 && (status_changed || due(self.last_tip.1, TOOLTIP_EVERY)) {
+            let _ = self.icon.set_tooltip(Some(tip.as_str()));
+            self.last_tip = (tip.clone(), Some(Instant::now()));
+        }
 
         // ---- mining
         let mut head = format!("● {} — {}", status.label(), cfg.pool_host);
-        if let Some(t) = *s.connected_since.lock().unwrap() {
-            head += &format!(" · {}", fmt::duration(t.elapsed().as_secs_f64()));
+        match (&status, &pool) {
+            (Status::Offline, PoolStatus::NoAddress) => head = format!("● {} — {}", status.label(), t.set_address),
+            (Status::Offline, PoolStatus::Error(e)) => {
+                let e: String = e.chars().take(70).collect();
+                head = format!("● {} — {}", status.label(), e);
+            }
+            _ => {}
+        }
+        if let Some(since) = *s.connected_since.lock().unwrap() {
+            head += &format!(" · {}", fmt::duration(since.elapsed().as_secs_f64()));
         }
         self.set_row(Row::Status, head);
         let mut devs = Vec::new();
@@ -436,28 +498,28 @@ impl Tray {
         ] {
             if on {
                 let (v, u) = fmt::hashrate(h);
-                devs.push(format!("{name} {v} {u}"));
+                devs.push((name, format!("{name} {v} {u}")));
             }
         }
-        let split = if devs.len() > 1 { format!("   ({})", devs.join(" · ")) } else if devs.is_empty() { "   (nenhum dispositivo)".into() } else { format!("   ({})", devs[0].split(' ').next().unwrap_or("")) };
+        let split = match devs.len() {
+            0 => format!("   ({})", t.r_no_device),
+            1 => format!("   ({})", devs[0].0),
+            _ => format!("   ({})", devs.iter().map(|d| d.1.as_str()).collect::<Vec<_>>().join(" · ")),
+        };
         self.set_row(Row::Hashrate, format!("Hashrate   {hr}{split}"));
-        self.set_row(Row::BestDiff, format!("Melhor dificuldade   {}", fmt::diff(s.best_diff.get())));
+        self.set_row(Row::BestDiff, format!("{}   {}", t.r_best, fmt::diff(s.best_diff.get())));
         self.set_row(
             Row::Shares,
-            format!(
-                "Shares   {} (32 bits) · aceitas {} · blocos {}",
-                s.shares32.load(Relaxed),
-                s.accepted.load(Relaxed),
-                s.blocks.load(Relaxed)
-            ),
+            fill(t.r_shares, &[&s.shares32.load(Relaxed), &s.accepted.load(Relaxed), &s.blocks.load(Relaxed)]),
         );
         let chance = match n.net_difficulty {
             Some(d) if s.hashrate() > 0.0 => {
                 let per_block = d * 4_294_967_296.0;
                 let p = -(-s.hashrate() * 86400.0 / per_block).exp_m1();
-                format!("Chance hoje   {} · bloco a cada ~{}", fmt::odds(p), fmt::duration(per_block / s.hashrate()))
+                let every = fill(t.r_block_every, &[&fmt::duration(per_block / s.hashrate())]);
+                format!("{}   {} · {every}", t.r_chance, fmt::odds(p))
             }
-            _ => "Chance hoje   —".into(),
+            _ => format!("{}   —", t.r_chance),
         };
         self.set_row(Row::Chance, chance);
 
@@ -465,27 +527,26 @@ impl Tray {
         self.set_row(
             Row::Block,
             match &n.last_block {
-                Some(b) => format!(
-                    "Bloco   #{} · {} · há {}",
-                    fmt::br(b.height as f64, 0),
-                    b.pool,
-                    fmt::duration(now_unix().saturating_sub(b.time) as f64)
-                ),
-                None => "Bloco   —".into(),
+                Some(b) => {
+                    let ago = fill(t.ago, &[&fmt::duration(now_unix().saturating_sub(b.time) as f64)]);
+                    format!("{}   #{} · {} · {ago}", t.r_block, fmt::num(b.height as f64, 0), b.pool)
+                }
+                None => format!("{}   —", t.r_block),
             },
         );
         self.set_row(
             Row::Difficulty,
             match &n.diff_adj {
-                Some(a) => format!(
-                    "Ajuste de dificuldade   {}% · {}{}% em ~{} ({} blocos)",
-                    fmt::br(a.progress_pct, 0),
-                    if a.change_pct >= 0.0 { "+" } else { "" },
-                    fmt::br(a.change_pct, 2),
-                    fmt::duration(a.remaining_secs),
-                    fmt::br(a.remaining_blocks as f64, 0)
+                Some(a) => fill(
+                    t.r_diff_adj,
+                    &[
+                        &fmt::num(a.progress_pct, 0),
+                        &format!("{}{}", if a.change_pct >= 0.0 { "+" } else { "" }, fmt::num(a.change_pct, 2)),
+                        &fmt::duration(a.remaining_secs),
+                        &fmt::num(a.remaining_blocks as f64, 0),
+                    ],
                 ),
-                None => "Ajuste de dificuldade   —".into(),
+                None => format!("{}   —", t.r_diff_adj.split("   ").next().unwrap_or("")),
             },
         );
         let price = n.price(&cfg.currency).map(|p| crate::currency::price(p, &cfg.currency));
@@ -494,40 +555,44 @@ impl Tray {
         // ---- occupancy and fees
         match (netinfo::congestion(&n), &n.mempool) {
             (Some((c, blocks)), Some(m)) => {
-                self.set_row(Row::Network, format!("REDE BITCOIN   {} {}", c.dot(), c.label()));
+                self.set_row(Row::Network, format!("{}   {} {}", t.r_network, c.dot(), c.label()));
                 let clear = (blocks.ceil().max(1.0)) * 600.0;
                 self.set_row(
                     Row::Queue,
                     format!(
-                        "Fila pagante   {} {} {} · ~{} para limpar",
+                        "{}   {} {} {} · {}",
+                        t.r_queue,
                         bar(netinfo::congestion_fraction(blocks), 16),
-                        fmt::br(blocks, if blocks < 10.0 { 2 } else { 0 }),
-                        if blocks <= 1.0 { "bloco" } else { "blocos" },
-                        fmt::duration(clear)
+                        fmt::num(blocks, if blocks < 10.0 { 2 } else { 0 }),
+                        if blocks <= 1.0 { t.block_one } else { t.block_many },
+                        fill(t.to_clear, &[&fmt::duration(clear)])
                     ),
                 );
                 let cheap = m.vsize - m.backlog_vsize;
-                let mut mp = format!("Mempool   {} tx · {} vMB", fmt::br_big(m.count as f64), fmt::br(m.vsize / 1e6, 1));
+                let mut mp = format!("Mempool   {} tx · {} vMB", fmt::big(m.count as f64), fmt::num(m.vsize / 1e6, 1));
                 if cheap > m.vsize * 0.5 {
-                    mp += &format!(" (maioria abaixo de {} sat/vB)", fmt::feerate(n.fee_minimum.unwrap_or(1.0)));
+                    mp += " ";
+                    mp += &fill(t.mostly_below, &[&fmt::feerate(n.fee_minimum.unwrap_or(1.0))]);
                 }
                 self.set_row(Row::Mempool, mp);
                 self.set_row(
                     Row::NextBlock,
                     match m.next_block {
                         Some((lo, med, hi, ntx)) => format!(
-                            "Próximo bloco   {} – {} sat/vB · mediana {} · {} tx",
+                            "{}   {} – {} sat/vB · {} {} · {} tx",
+                            t.r_next_block,
                             fmt::feerate(lo),
                             fmt::feerate(hi),
+                            t.median,
                             fmt::feerate(med),
-                            fmt::br_big(ntx as f64)
+                            fmt::big(ntx as f64)
                         ),
-                        None => "Próximo bloco   —".into(),
+                        None => format!("{}   —", t.r_next_block),
                     },
                 );
             }
             _ => {
-                self.set_row(Row::Network, "REDE BITCOIN   carregando…".into());
+                self.set_row(Row::Network, format!("{}   {}", t.r_network, t.loading));
                 for r in [Row::Queue, Row::Mempool, Row::NextBlock] {
                     self.set_row(r, "—".into());
                 }
@@ -535,30 +600,37 @@ impl Tray {
         }
         let size_label = TX_SIZES
             .iter()
-            .find(|x| x.0 == cfg.tx_vbytes)
-            .map(|x| x.1.to_string())
+            .position(|&vb| vb == cfg.tx_vbytes)
+            .map(|i| t.tx_labels[i].to_string())
             .unwrap_or_else(|| format!("{} vB", cfg.tx_vbytes));
-        self.set_row(Row::FeeTitle, format!("TAXA PARA ENVIAR AGORA   ({size_label})"));
-        for (i, t) in Tier::ALL.iter().enumerate() {
+        self.set_row(Row::FeeTitle, format!("{}   ({size_label})", t.fee_title));
+        for (i, tier) in Tier::ALL.iter().enumerate() {
             let row = [Row::Fee0, Row::Fee1, Row::Fee2, Row::Fee3][i];
-            let text = match t.fee(&n) {
+            let text = match tier.fee(&n) {
                 Some(f) => {
                     let sats = (f * cfg.tx_vbytes as f64).round();
-                    format!("{}   {} sat/vB · {} sats {}", t.label(), fmt::feerate(f), fmt::br(sats, 0), money(sats, &n, &cfg.currency))
+                    format!(
+                        "{}   {} sat/vB · {} sats {}",
+                        tier.label(),
+                        fmt::feerate(f),
+                        fmt::num(sats, 0),
+                        money(sats, &n, &cfg.currency)
+                    )
                 }
-                None => format!("{}   —", t.label()),
+                None => format!("{}   —", tier.label()),
             };
             self.set_row(row, text);
         }
         let rec = netinfo::congestion(&n).and_then(|(c, _)| {
             let (tier, why) = netinfo::recommendation(c);
-            Some(format!("✅ Recomendado: {} sat/vB — {why}", fmt::feerate(tier.fee(&n)?)))
+            Some(format!("{}: {} sat/vB — {why}", t.recommended, fmt::feerate(tier.fee(&n)?)))
         });
-        self.set_row(Row::Recommended, rec.unwrap_or_else(|| "✅ Recomendado: —".into()));
+        self.set_row(Row::Recommended, rec.unwrap_or_else(|| format!("{}: —", t.recommended)));
 
         // ---- controls
-        self.pause_item.set_text(if paused { "Retomar mineração" } else { "Pausar mineração" });
-        self.pool_item.set_enabled(pool_url(&cfg).is_some());
+        let p = &self.parts;
+        p.pause_item.set_text(if paused { t.resume_mining } else { t.pause_mining });
+        p.pool_item.set_enabled(pool_url(&cfg).is_some());
         let cpu_on = s.cpu_enabled.load(Relaxed);
         let gpu_on = s.gpu_enabled.load(Relaxed);
         let dev = match (cpu_on, gpu_on) {
@@ -567,35 +639,42 @@ impl Tray {
             (false, true) => Some(Device::Gpu),
             _ => None,
         };
-        for (d, it) in &self.dev_items {
+        for (d, it) in &p.dev_items {
             it.set_checked(Some(*d) == dev);
         }
         let cu = s.cpu_usage.load(Relaxed);
-        for (p, it) in &self.cpu_items {
-            it.set_checked(*p == cu);
+        for (v, it) in &p.cpu_items {
+            it.set_checked(*v == cu);
             it.set_enabled(cpu_on);
         }
         let gu = s.gpu_usage.load(Relaxed);
-        for (p, it) in &self.gpu_items {
-            it.set_checked(*p == gu);
+        for (v, it) in &p.gpu_items {
+            it.set_checked(*v == gu);
             it.set_enabled(gpu_on);
         }
-        for (vb, it) in &self.tx_items {
+        for (vb, it) in &p.tx_items {
             it.set_checked(*vb == cfg.tx_vbytes);
         }
-        for (k, it) in &self.field_items {
+        for (k, it) in &p.field_items {
             it.set_checked(cfg.tray_fields.iter().any(|f| f == k));
         }
         let cur = crate::currency::code(&cfg.currency);
-        for (c, it) in &self.cur_items {
+        for (c, it) in &p.cur_items {
             it.set_checked(*c == cur);
+        }
+        let auto = cfg.language.trim().eq_ignore_ascii_case("auto");
+        for (code, it) in &p.lang_items {
+            it.set_checked(if *code == "auto" { auto } else { !auto && i18n::resolve(&cfg.language).code() == *code });
         }
 
         // Debug: NERDMINER_TRAY_DUMP=1 prints the menu to stderr (screenshots of the
         // menu bar are not always possible).
         if std::env::var_os("NERDMINER_TRAY_DUMP").is_some() {
-            let title: Vec<String> = cfg.tray_fields.iter().filter_map(|k| field_text(k, s, &n, paused)).collect();
-            eprintln!("=== [{status:?}] title: {}\n--- tooltip:\n{tip}\n--- menu:\n{}\n", title.join(" · "), self.texts.join("\n"));
+            eprintln!(
+                "=== [{status:?}] title: {}\n--- tooltip:\n{tip}\n--- menu:\n{}\n",
+                parts.join(" · "),
+                self.texts.join("\n")
+            );
         }
     }
 }
@@ -611,6 +690,9 @@ mod tests {
         assert!(matches!(parse_cmd("tx:154"), Some(TrayCmd::TxSize(154))));
         assert!(matches!(parse_cmd("field:fee"), Some(TrayCmd::Field("fee"))));
         assert!(matches!(parse_cmd("cur:EUR"), Some(TrayCmd::Currency("EUR"))));
+        assert!(matches!(parse_cmd("lang:en"), Some(TrayCmd::Language("en"))));
+        assert!(matches!(parse_cmd("lang:auto"), Some(TrayCmd::Language("auto"))));
+        assert!(parse_cmd("lang:xx").is_none());
         assert!(parse_cmd("cur:XYZ").is_none());
         assert!(parse_cmd("field:nope").is_none());
         assert!(parse_cmd("cpu:x").is_none());

@@ -15,6 +15,41 @@ pub struct Submit {
     pub diff: f64,
 }
 
+/// Connection state of the stratum client (translated when shown).
+#[derive(Clone, Debug, PartialEq)]
+pub enum PoolStatus {
+    Disconnected,
+    NoAddress,
+    Connecting(String),
+    Connected(String),
+    Error(String),
+}
+
+/// State of the GPU miner (translated when shown).
+#[derive(Clone, Debug, PartialEq)]
+pub enum GpuStatus {
+    Off,
+    Paused,
+    Starting,
+    Unavailable(String),
+    Waiting,
+    Mining(String),
+}
+
+impl GpuStatus {
+    pub fn text(&self) -> String {
+        let t = crate::i18n::t();
+        match self {
+            GpuStatus::Off => t.gpu_off.into(),
+            GpuStatus::Paused => t.gpu_paused.into(),
+            GpuStatus::Starting => t.gpu_init.into(),
+            GpuStatus::Unavailable(e) => crate::i18n::fill(t.gpu_unavailable, &[e]),
+            GpuStatus::Waiting => t.gpu_waiting.into(),
+            GpuStatus::Mining(name) => crate::i18n::fill(t.gpu_mining, &[name]),
+        }
+    }
+}
+
 #[derive(Default, Clone)]
 pub struct NetInfo {
     /// BTC price per currency code ("USD", "BRL", "EUR", ...).
@@ -123,10 +158,10 @@ pub struct Shared {
     pub blocks: AtomicU64,
     pub best_diff: AtomicF64,
     pub pool_diff: AtomicF64,
-    pub pool_status: Mutex<String>,
+    pub pool_status: Mutex<PoolStatus>,
     pub pool_connected: AtomicBool,
     pub connected_since: Mutex<Option<Instant>>,
-    pub gpu_status: Mutex<String>,
+    pub gpu_status: Mutex<GpuStatus>,
     pub net: Mutex<NetInfo>,
     pub log: Mutex<Vec<String>>,
 
@@ -161,10 +196,10 @@ impl Shared {
             blocks: AtomicU64::new(0),
             best_diff: AtomicF64::new(0.0),
             pool_diff: AtomicF64::new(1.0),
-            pool_status: Mutex::new("Desconectado".into()),
+            pool_status: Mutex::new(PoolStatus::Disconnected),
             pool_connected: AtomicBool::new(false),
             connected_since: Mutex::new(None),
-            gpu_status: Mutex::new("Desligada".into()),
+            gpu_status: Mutex::new(GpuStatus::Off),
             net: Mutex::new(NetInfo::default()),
             log: Mutex::new(Vec::new()),
             submit_tx,
@@ -183,8 +218,8 @@ impl Shared {
         }
     }
 
-    pub fn set_status(&self, s: impl Into<String>) {
-        *self.pool_status.lock().unwrap() = s.into();
+    pub fn set_status(&self, s: PoolStatus) {
+        *self.pool_status.lock().unwrap() = s;
     }
 
     /// Next work unit for the current job, plus its job generation.
@@ -219,11 +254,11 @@ impl Shared {
             self.shares32.fetch_add(1, Relaxed);
         }
         if self.best_diff.fetch_max(diff) {
-            self.log(format!("Nova melhor dificuldade: {}", crate::fmt::diff(diff)));
+            self.log(crate::i18n::fill(crate::i18n::t().log_best, &[&crate::fmt::diff(diff)]));
         }
         if diff >= w.net_diff {
             self.blocks.fetch_add(1, Relaxed);
-            self.log("!!! BLOCO VÁLIDO ENCONTRADO !!!");
+            self.log(crate::i18n::t().log_block);
         }
         if diff >= w.pool_diff {
             let _ = self.submit_tx.send(Submit {

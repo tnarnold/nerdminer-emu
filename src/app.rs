@@ -1,6 +1,7 @@
 //! Desktop "device" UI that mimics the NerdMiner TFT screens.
 
 use crate::config::Config;
+use crate::i18n::{self, fill, t};
 use crate::miner::max_threads;
 use crate::screens::{Lcd, Screen, Screens};
 use crate::state::Shared;
@@ -48,7 +49,7 @@ impl NerdApp {
         }) {
             Ok(t) => Some(t),
             Err(e) => {
-                shared.log(format!("Bandeja indisponível: {e}"));
+                shared.log(fill(t().log_tray_unavailable, &[&e]));
                 None
             }
         };
@@ -80,8 +81,8 @@ impl NerdApp {
             ctx.send_viewport_cmd(ViewportCommand::Minimized(false));
             ctx.send_viewport_cmd(ViewportCommand::Focus);
         }
-        if let Some(t) = &self.tray {
-            t.toggle_item.set_text(if v { "Ocultar janela" } else { "Mostrar janela" });
+        if let Some(tray) = &mut self.tray {
+            tray.set_window_visible(v);
         }
     }
 
@@ -123,6 +124,8 @@ impl NerdApp {
         cfg.tray_fields = self.draft.tray_fields.clone();
         cfg.tx_vbytes = self.draft.tx_vbytes;
         cfg.currency = self.draft.currency.clone();
+        cfg.language = self.draft.language.clone();
+        i18n::set(i18n::resolve(&cfg.language));
         cfg.save();
     }
 
@@ -171,6 +174,10 @@ impl NerdApp {
                 self.draft.gpu_usage = p;
                 self.persist_runtime();
             }
+            TrayCmd::Language(l) => {
+                self.draft.language = l.to_string();
+                self.persist_runtime();
+            }
             TrayCmd::Currency(c) => {
                 self.draft.currency = c.to_string();
                 self.persist_runtime();
@@ -186,7 +193,7 @@ impl NerdApp {
                 } else {
                     // Keep the order of the menu, not the order of clicks.
                     f.push(k.to_string());
-                    f.sort_by_key(|x| crate::tray::FIELDS.iter().position(|(key, _)| key == x));
+                    f.sort_by_key(|x| crate::tray::FIELDS.iter().position(|key| key == x));
                 }
                 self.persist_runtime();
             }
@@ -232,7 +239,7 @@ impl NerdApp {
         if resp.clicked() {
             self.next_screen(1);
         }
-        resp.on_hover_text("Clique: próxima tela • Arraste: mover");
+        resp.on_hover_text(t().hover_screen);
     }
 
     /// Debug: with NERDMINER_SHOTS=<dir>, save a raw RGBA screenshot of each screen and exit.
@@ -306,21 +313,21 @@ impl NerdApp {
         let ctx = ui.ctx().clone();
         ui.horizontal(|ui| {
             ui.add_space(BEZEL - 4.0);
-            if ui.small_button("◀").on_hover_text("Tela anterior").clicked() {
+            if ui.small_button("◀").on_hover_text(t().prev_screen).clicked() {
                 self.next_screen(-1);
             }
-            if ui.small_button("▶").on_hover_text("Próxima tela").clicked() {
+            if ui.small_button("▶").on_hover_text(t().next_screen).clicked() {
                 self.next_screen(1);
             }
             let paused = self.shared.paused.load(Relaxed);
-            if ui.small_button(if paused { "▶ Minerar" } else { "⏸ Pausar" }).clicked() {
+            if ui.small_button(if paused { t().btn_mine } else { t().btn_pause }).clicked() {
                 self.toggle_pause();
             }
-            if ui.selectable_label(self.settings_open, "⚙").on_hover_text("Configurações").clicked() {
+            if ui.selectable_label(self.settings_open, "⚙").on_hover_text(t().settings).clicked() {
                 let o = !self.settings_open;
                 self.set_settings_open(&ctx, o);
             }
-            if ui.selectable_label(self.draft.always_on_top, "📌").on_hover_text("Sempre no topo").clicked() {
+            if ui.selectable_label(self.draft.always_on_top, "📌").on_hover_text(t().always_on_top).clicked() {
                 self.draft.always_on_top = !self.draft.always_on_top;
                 ctx.send_viewport_cmd(ViewportCommand::WindowLevel(if self.draft.always_on_top {
                     WindowLevel::AlwaysOnTop
@@ -329,10 +336,10 @@ impl NerdApp {
                 }));
                 self.persist_runtime();
             }
-            if self.tray.is_some() && ui.small_button("Esconder").on_hover_text("Esconder na bandeja do sistema").clicked() {
+            if self.tray.is_some() && ui.small_button(t().hide).on_hover_text(t().hide_tip).clicked() {
                 self.set_visible(&ctx, false);
             }
-            if ui.small_button("Sair").on_hover_text("Encerrar o minerador").clicked() {
+            if ui.small_button(t().quit).on_hover_text(t().quit_tip).clicked() {
                 self.quit();
             }
         });
@@ -343,28 +350,28 @@ impl NerdApp {
             ui.add_space(4.0);
             ui.heading("Pool");
             egui::Grid::new("pool").num_columns(2).spacing([8.0, 6.0]).show(ui, |ui| {
-                ui.label("Endereço BTC");
+                ui.label(t().btc_address);
                 ui.add(egui::TextEdit::singleline(&mut self.draft.btc_address).hint_text("bc1q…").desired_width(220.0));
                 ui.end_row();
-                ui.label("Pool");
+                ui.label(t().pool);
                 ui.add(egui::TextEdit::singleline(&mut self.draft.pool_host).desired_width(220.0));
                 ui.end_row();
-                ui.label("Porta");
+                ui.label(t().port);
                 ui.add(egui::DragValue::new(&mut self.draft.pool_port).range(1..=65535));
                 ui.end_row();
-                ui.label("Worker");
+                ui.label(t().worker);
                 ui.add(egui::TextEdit::singleline(&mut self.draft.worker_name).desired_width(220.0));
                 ui.end_row();
-                ui.label("Senha");
+                ui.label(t().password);
                 ui.add(egui::TextEdit::singleline(&mut self.draft.pool_password).desired_width(220.0));
                 ui.end_row();
-                ui.label("Dif. sugerida");
+                ui.label(t().suggest_diff);
                 ui.add(egui::DragValue::new(&mut self.draft.suggest_diff).range(0.0..=1e9).speed(0.01))
-                    .on_hover_text("Enviada via mining.suggest_difficulty (0 = não enviar)");
+                    .on_hover_text(t().suggest_diff_tip);
                 ui.end_row();
             });
             ui.horizontal(|ui| {
-                if ui.button("Salvar e reconectar").clicked() {
+                if ui.button(t().save_reconnect).clicked() {
                     self.apply_pool();
                 }
                 for (name, host, port) in [("public-pool", "public-pool.io", 21496u16), ("ckpool", "solo.ckpool.org", 3333)] {
@@ -376,10 +383,10 @@ impl NerdApp {
             });
 
             ui.separator();
-            ui.heading("Mineração");
+            ui.heading(t().h_mining);
             let mut changed = false;
             ui.horizontal(|ui| {
-                ui.label("Dispositivo");
+                ui.label(t().device);
                 let (c, g) = (self.draft.cpu_enabled, self.draft.gpu_enabled);
                 for (label, cpu, gpu) in [("CPU", true, false), ("GPU", false, true), ("CPU + GPU", true, true)] {
                     if ui.selectable_label(c == cpu && g == gpu, label).clicked() {
@@ -393,24 +400,24 @@ impl NerdApp {
             ui.add_enabled_ui(self.draft.cpu_enabled, |ui| {
                 ui.label(egui::RichText::new("CPU").strong());
                 changed |= ui
-                    .add(egui::Slider::new(&mut self.draft.cpu_threads, 1..=max_threads()).text("threads"))
+                    .add(egui::Slider::new(&mut self.draft.cpu_threads, 1..=max_threads()).text(t().threads))
                     .changed();
-                changed |= ui.add(egui::Slider::new(&mut self.draft.cpu_usage, 1..=100).text("% uso por thread")).changed();
+                changed |= ui.add(egui::Slider::new(&mut self.draft.cpu_usage, 1..=100).text(t().cpu_usage_slider)).changed();
                 let est = self.draft.cpu_threads as f64 * self.draft.cpu_usage as f64 / max_threads() as f64;
-                ui.weak(format!("≈ {est:.0}% da CPU total ({} núcleos lógicos)", max_threads()));
+                ui.weak(fill(t().cpu_total, &[&format!("{est:.0}"), &max_threads()]));
             });
 
             ui.add_enabled_ui(self.draft.gpu_enabled, |ui| {
                 ui.label(egui::RichText::new("GPU").strong());
-                changed |= ui.add(egui::Slider::new(&mut self.draft.gpu_usage, 1..=100).text("% uso da GPU")).changed();
-                ui.weak(format!("Status: {}", self.shared.gpu_status.lock().unwrap()));
+                changed |= ui.add(egui::Slider::new(&mut self.draft.gpu_usage, 1..=100).text(t().gpu_usage_slider)).changed();
+                ui.weak(fill(t().status, &[&self.shared.gpu_status.lock().unwrap().text()]));
             });
 
             ui.separator();
-            ui.heading("Janela");
-            changed |= ui.checkbox(&mut self.draft.start_hidden, "Iniciar escondido na bandeja").changed();
+            ui.heading(t().h_window);
+            changed |= ui.checkbox(&mut self.draft.start_hidden, t().start_hidden).changed();
             ui.horizontal(|ui| {
-                ui.label("Zoom da tela");
+                ui.label(t().zoom);
                 for z in [1.0f32, 1.5, 2.0, 2.5] {
                     if ui.selectable_label(self.zoom == z, format!("{z}x")).clicked() {
                         self.zoom = z;
@@ -421,14 +428,11 @@ impl NerdApp {
                 }
             });
             ui.horizontal(|ui| {
-                ui.label("Moeda");
+                ui.label(t().currency);
                 let cur = crate::currency::code(&self.draft.currency);
-                let label = |c: &str| {
-                    let (code, sym, name) = crate::currency::CURRENCIES.iter().find(|x| x.0 == c).copied().unwrap_or(("USD", "US$", ""));
-                    format!("{code} · {sym} · {name}")
-                };
+                let label = |c: &str| format!("{c} · {} · {}", crate::currency::symbol(c), crate::currency::name(c));
                 egui::ComboBox::from_id_salt("currency").selected_text(label(cur)).width(220.0).show_ui(ui, |ui| {
-                    for (code, _, _) in crate::currency::CURRENCIES {
+                    for (code, _) in crate::currency::CURRENCIES {
                         if ui.selectable_label(cur == code, label(code)).clicked() {
                             self.draft.currency = code.to_string();
                             changed = true;
@@ -437,20 +441,37 @@ impl NerdApp {
                 });
             })
             .response
-            .on_hover_text("Preço do BTC nas telas e na bandeja, e custo das transações");
+            .on_hover_text(t().currency_tip);
+            ui.horizontal(|ui| {
+                ui.label(t().language);
+                let auto = self.draft.language.trim().eq_ignore_ascii_case("auto");
+                let current = if auto { t().language_auto.to_string() } else { i18n::resolve(&self.draft.language).native_name().to_string() };
+                egui::ComboBox::from_id_salt("language").selected_text(current).width(220.0).show_ui(ui, |ui| {
+                    if ui.selectable_label(auto, t().language_auto).clicked() {
+                        self.draft.language = "auto".into();
+                        changed = true;
+                    }
+                    for l in i18n::Lang::ALL {
+                        if ui.selectable_label(!auto && i18n::resolve(&self.draft.language) == l, l.native_name()).clicked() {
+                            self.draft.language = l.code().into();
+                            changed = true;
+                        }
+                    }
+                });
+            });
             if changed {
                 self.persist_runtime();
             }
 
             ui.separator();
-            ui.heading("Log");
+            ui.heading(t().h_log);
             egui::ScrollArea::vertical().id_salt("log").max_height(120.0).stick_to_bottom(true).show(ui, |ui| {
                 for l in self.shared.log.lock().unwrap().iter() {
                     ui.monospace(egui::RichText::new(l).size(10.0));
                 }
             });
             ui.add_space(6.0);
-            ui.weak("Mineração solo é uma loteria: a chance de achar um bloco com CPU/GPU é minúscula.");
+            ui.weak(t().lottery_note);
         });
     }
 }

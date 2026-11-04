@@ -206,7 +206,7 @@ impl Screens {
         let c = if ok { Color32::from_rgb(40, 200, 90) } else { Color32::from_rgb(220, 50, 50) };
         l.p.circle_filled(l.pos(296.0, 6.0), 2.2 * l.s, c);
         if s.paused.load(Relaxed) {
-            l.sans("PAUSADO", 64.0, 124.0, 11.0, TFT_BLACK, Align2::CENTER_CENTER);
+            l.sans(crate::i18n::t().paused_screen, 64.0, 124.0, 11.0, TFT_BLACK, Align2::CENTER_CENTER);
         }
     }
 

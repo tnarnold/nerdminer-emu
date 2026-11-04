@@ -1,6 +1,7 @@
 //! GPU miner using a wgpu compute shader (Metal / Vulkan / DX12).
 
-use crate::state::Shared;
+use crate::i18n::{fill, t};
+use crate::state::{GpuStatus, Shared};
 use crate::work::{WorkUnit, top32_threshold, verify};
 use std::sync::Arc;
 use std::sync::atomic::Ordering::*;
@@ -30,7 +31,7 @@ impl GpuMiner {
             power_preference: wgpu::PowerPreference::HighPerformance,
             ..Default::default()
         }))
-        .map_err(|e| format!("nenhuma GPU: {e}"))?;
+        .map_err(|e| fill(t().gpu_none, &[&e]))?;
         let info = adapter.get_info();
         let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
             label: Some("nerdminer"),
@@ -131,8 +132,8 @@ pub fn spawn(shared: Arc<Shared>) {
         .expect("spawn gpu miner");
 }
 
-fn set_status(shared: &Shared, s: impl Into<String>) {
-    *shared.gpu_status.lock().unwrap() = s.into();
+fn set_status(shared: &Shared, s: GpuStatus) {
+    *shared.gpu_status.lock().unwrap() = s;
 }
 
 fn worker(shared: Arc<Shared>) {
@@ -142,7 +143,7 @@ fn worker(shared: Arc<Shared>) {
     'outer: loop {
         if shared.paused.load(Relaxed) || !shared.gpu_enabled.load(Relaxed) {
             if !failed {
-                set_status(&shared, if gpu.is_some() { "Pausada" } else { "Desligada" });
+                set_status(&shared, if gpu.is_some() { GpuStatus::Paused } else { GpuStatus::Off });
             }
             std::thread::sleep(Duration::from_millis(250));
             continue;
@@ -152,15 +153,15 @@ fn worker(shared: Arc<Shared>) {
                 std::thread::sleep(Duration::from_millis(500));
                 continue;
             }
-            set_status(&shared, "Inicializando…");
+            set_status(&shared, GpuStatus::Starting);
             match GpuMiner::new() {
                 Ok(g) => {
                     shared.log(format!("GPU: {}", g.name));
                     gpu = Some(g);
                 }
                 Err(e) => {
-                    shared.log(format!("GPU indisponível: {e}"));
-                    set_status(&shared, format!("Indisponível: {e}"));
+                    shared.log(fill(t().log_gpu_unavailable, &[&e]));
+                    set_status(&shared, GpuStatus::Unavailable(e.to_string()));
                     failed = true;
                     continue;
                 }
@@ -168,11 +169,11 @@ fn worker(shared: Arc<Shared>) {
         }
         let g = gpu.as_ref().unwrap();
         let Some((work, generation)) = shared.next_work() else {
-            set_status(&shared, "Aguardando trabalho");
+            set_status(&shared, GpuStatus::Waiting);
             std::thread::sleep(Duration::from_millis(250));
             continue;
         };
-        set_status(&shared, format!("Minerando — {}", g.name));
+        set_status(&shared, GpuStatus::Mining(g.name.clone()));
         let mut base: u64 = 0;
         while base < (1u64 << 32) {
             let count = batch.min(((1u64 << 32) - base) as u32 / WG * WG).max(WG);

@@ -187,7 +187,8 @@ barulhentos.
 |---|---|
 | **Iniciar escondido na bandeja** | O app abre direto na bandeja, sem mostrar a janela. Útil junto com iniciar com o sistema. |
 | **Zoom da tela** | Tamanho da tela: 1x (320×170, como o aparelho), 1.5x, 2x ou 2.5x. |
-| **Moeda** | Moeda do preço do BTC (telas e bandeja) e do custo das transações: BRL, USD, EUR, GBP, CAD, CHF, AUD ou JPY. Padrão: pelo idioma do sistema (português → BRL). Também na bandeja: *Moeda ▸*. |
+| **Moeda** | Moeda do preço do BTC (telas e bandeja) e do custo das transações: BRL, USD, EUR, GBP, CAD, CHF, AUD ou JPY. Padrão: pelo idioma/região do sistema (português → BRL). Também na bandeja: *Moeda ▸*. |
+| **Idioma** | Idioma da interface: Automático (sistema), Português (Brasil) ou English. Vale na hora, inclusive no menu da bandeja. Também na bandeja: *Idioma ▸*. |
 
 ### Log
 
@@ -359,6 +360,7 @@ Dá para editar com o app fechado. Campos que faltarem usam o valor padrão.
 | `tray_fields` | `["hashrate", "fee"]` | Campos na barra de menus (macOS): `hashrate`, `fee`, `last_block`, `best_diff`, `price`. |
 | `tx_vbytes` | `141` | Tamanho da transação usado no "custo para enviar", em vB. |
 | `currency` | pelo idioma do sistema | `BRL`, `USD`, `EUR`, `GBP`, `CAD`, `CHF`, `AUD` ou `JPY`. |
+| `language` | `"auto"` | `"auto"` (sistema), `"pt-BR"` ou `"en"`. |
 
 Para voltar tudo ao padrão, feche o app e apague o arquivo.
 

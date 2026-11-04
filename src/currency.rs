@@ -5,17 +5,24 @@
 
 use crate::fmt;
 
-/// (ISO code, symbol, name in Portuguese)
-pub const CURRENCIES: [(&str, &str, &str); 8] = [
-    ("BRL", "R$", "Real"),
-    ("USD", "US$", "Dólar americano"),
-    ("EUR", "€", "Euro"),
-    ("GBP", "£", "Libra esterlina"),
-    ("CAD", "C$", "Dólar canadense"),
-    ("CHF", "CHF", "Franco suíço"),
-    ("AUD", "A$", "Dólar australiano"),
-    ("JPY", "¥", "Iene"),
+/// (ISO code, symbol). Names are translated in `i18n::Tr::currency_names` (same order).
+pub const CURRENCIES: [(&str, &str); 8] = [
+    ("BRL", "R$"),
+    ("USD", "US$"),
+    ("EUR", "€"),
+    ("GBP", "£"),
+    ("CAD", "C$"),
+    ("CHF", "CHF"),
+    ("AUD", "A$"),
+    ("JPY", "¥"),
 ];
+
+/// Currency name in the current language.
+pub fn name(c: &str) -> &'static str {
+    let c = code(c);
+    let i = CURRENCIES.iter().position(|x| x.0 == c).unwrap_or(1);
+    crate::i18n::t().currency_names[i]
+}
 
 /// Normalized code: one of `CURRENCIES`, USD for anything unknown.
 pub fn code(c: &str) -> &'static str {
@@ -40,25 +47,27 @@ fn spaced(sym: &str) -> String {
     if sym.chars().count() > 1 { format!("{sym} ") } else { sym.to_string() }
 }
 
+// Number separators follow the current language (tests run with the default, Portuguese).
+
 /// Small amounts (fee costs): "R$ 1,21", "€0,20", "¥34".
 pub fn amount(v: f64, c: &str) -> String {
     let dec = if code(c) == "JPY" { 0 } else { 2 };
-    format!("{}{}", spaced(symbol(c)), fmt::br(v, dec))
+    format!("{}{}", spaced(symbol(c)), fmt::num(v, dec))
 }
 
 /// BTC price in full: "R$ 430.462", "US$ 78.454".
 pub fn price(v: f64, c: &str) -> String {
-    format!("{}{}", spaced(symbol(c)), fmt::br(v, 0))
+    format!("{}{}", spaced(symbol(c)), fmt::num(v, 0))
 }
 
 /// BTC price, compact for the menu bar: "R$ 430k", "US$ 78,5k", "¥12,4M".
 pub fn price_short(v: f64, c: &str) -> String {
     let n = if v >= 1e6 {
-        format!("{}M", fmt::br(v / 1e6, 1))
+        format!("{}M", fmt::num(v / 1e6, 1))
     } else if v >= 100_000.0 {
-        format!("{}k", fmt::br(v / 1e3, 0))
+        format!("{}k", fmt::num(v / 1e3, 0))
     } else {
-        format!("{}k", fmt::br(v / 1e3, 1))
+        format!("{}k", fmt::num(v / 1e3, 1))
     };
     format!("{}{n}", spaced(symbol(c)))
 }
