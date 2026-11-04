@@ -23,6 +23,11 @@ pub struct Config {
     pub start_paused: bool,
     /// Scale of the 320x170 screen.
     pub zoom: f32,
+    /// Fields shown next to the tray icon in the macOS menu bar
+    /// ("hashrate", "fee", "last_block", "best_diff", "price").
+    pub tray_fields: Vec<String>,
+    /// Transaction size (vB) used to estimate the cost of sending now.
+    pub tx_vbytes: u32,
 }
 
 impl Default for Config {
@@ -44,6 +49,8 @@ impl Default for Config {
             start_hidden: false,
             start_paused: false,
             zoom: 1.5,
+            tray_fields: vec!["hashrate".into(), "fee".into()],
+            tx_vbytes: 141,
         }
     }
 }

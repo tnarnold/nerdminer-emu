@@ -198,14 +198,75 @@ new best difficulty and errors. It's the first place to look when something isn'
 ## 6. System tray
 
 The app adds an icon to the system tray (menu bar on macOS, notification area on Windows,
-StatusNotifier on Linux). Its menu has:
+StatusNotifier on Linux). It works as a small text dashboard, so you rarely need the window.
 
-- **Ocultar janela / Mostrar janela** (hide / show window)
-- **Pausar mineração / Retomar mineração** (pause / resume mining)
-- **Sair** (quit)
+**Status dot** on the icon: 🟢 mining · 🟡 connecting · 🔴 no pool (missing address or error) ·
+⚪ paused.
 
-The tooltip shows the current hashrate. On **macOS** the hashrate also appears as text next to the
-icon in the menu bar. On **Windows and Linux** double-clicking the icon shows/hides the window.
+**Menu bar text (macOS only).** Next to the icon, the fields you tick in *Barra de menus mostra*
+(menu bar shows). Default: hashrate + recommended fee, e.g. ` 82.4 MH/s · ⛽🟢 1 sat/vB`.
+
+| Field | Example | Meaning |
+|---|---|---|
+| Hashrate | `82.4 MH/s` | your current hashrate (`Pausado` when paused) |
+| Recommended fee | `⛽🟢 1 sat/vB` | fee to use right now; the dot is the network occupancy |
+| Last block | `⛓ 4m` | minutes since the last block on the network |
+| Best difficulty | `★ 0.133` | best share of this session |
+| Price | `R$ 431k` | BTC price (BRL, or USD if BRL is unavailable) |
+
+On **Windows and Linux** the tray can't show text: hover the icon for a tooltip with the same
+summary, and double-click it to show/hide the window.
+
+**The menu** (all lines refresh every second while open):
+
+```
+● Minerando — public-pool.io · 3 h 12
+Hashrate   82.4 MH/s   (CPU 26.1 MH/s · GPU 56.3 MH/s)
+Melhor dificuldade   0.133
+Shares   12 (32 bits) · aceitas 3 · blocos 0
+Chance hoje   1 em 92,2 bi · bloco a cada ~252 mi anos
+─────
+Bloco   #974.516 · AntPool · há 2 min
+Ajuste de dificuldade   39% · −2,66% em ~8,8 dias (1.228 blocos)
+BTC   US$ 78.454 · R$ 430.462
+─────
+REDE BITCOIN   🟢 Livre
+Fila pagante   ▕███░░░░░░░░░░░░░▏ 0,84 bloco · ~10 min para limpar
+Mempool   47,3 mil tx · 11,4 vMB (maioria abaixo de 1 sat/vB)
+Próximo bloco   0,12 – 137 sat/vB · mediana 1,3 · 4,3 mil tx
+TAXA PARA ENVIAR AGORA   (Simples 1→2, SegWit · 141 vB)
+🚀 Próximo bloco (~10 min)   2 sat/vB · 282 sats ≈ US$ 0,22 · R$ 1,21
+⏱ ~30 min   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
+🕐 ~1 hora   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
+🐢 Sem pressa   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
+✅ Recomendado: 1 sat/vB — rede livre, não pague mais
+─────
+Dispositivo ▸ · Uso da CPU ▸ · Uso da GPU ▸ · Tamanho da transação ▸ · Barra de menus mostra ▸
+Pausar mineração · Ver na pool… · Ver no mempool.space… · Ocultar janela · Sair
+```
+
+**Network occupancy.** The total mempool size is misleading (most of it can be transactions paying
+less than the minimum fee, which don't compete for space). The app counts only the transactions
+paying at least the minimum recommended fee and expresses that queue in blocks (1 block = 1 MvB,
+~10 min):
+
+| Level | Paying queue | Recommended tier |
+|---|---|---|
+| 🟢 Livre (free) | ≤ 1 block | *Sem pressa* (no rush): paying more doesn't help |
+| 🟡 Moderada (moderate) | 1–6 blocks (~1 h) | *~30 min* |
+| 🟠 Congestionada (congested) | 6–36 blocks (~6 h) | *~1 hora*, low fees may take hours |
+| 🔴 Muito congestionada (severe) | > 36 blocks | *~1 hora*, send only if urgent |
+
+**Cost of sending** = fee rate × transaction size, shown in sats, US$ and R$. Pick the size in
+*Tamanho da transação*: simple SegWit 1→2 (141 vB, default), Taproot 1→2 (154 vB) or a 5→1
+consolidation (382 vB).
+
+**Quick controls** (applied immediately and saved): *Dispositivo* (CPU / GPU / CPU + GPU),
+*Uso da CPU* (10–100 % per thread), *Uso da GPU* (10–100 %). *Ver na pool…* opens your stats page on
+public-pool.io or solo.ckpool.org; *Ver no mempool.space…* opens the latest block.
+
+Data sources: mempool.space (blocks, mempool, fees, difficulty, USD price) and Coinbase, with
+Binance as a fallback, for BTC/BRL. Fees and mempool refresh every 30 s, the rest every 60 s.
 
 While hidden, the app keeps mining normally.
 
@@ -295,6 +356,8 @@ You can edit it with the app closed. Missing fields use their default values.
 | `start_hidden` | `false` | Start hidden in the tray. |
 | `start_paused` | `false` | Start paused (updated automatically by the pause button). |
 | `zoom` | `1.5` | Screen zoom (1.0–2.5). |
+| `tray_fields` | `["hashrate", "fee"]` | Menu bar fields (macOS): `hashrate`, `fee`, `last_block`, `best_diff`, `price`. |
+| `tx_vbytes` | `141` | Transaction size used for the "cost of sending" estimate, in vB. |
 
 To reset everything, quit the app and delete the file.
 

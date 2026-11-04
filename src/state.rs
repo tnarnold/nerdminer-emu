@@ -18,12 +18,47 @@ pub struct Submit {
 #[derive(Default, Clone)]
 pub struct NetInfo {
     pub btc_price_usd: Option<f64>,
+    pub btc_price_brl: Option<f64>,
     pub block_height: Option<u64>,
     pub net_hashrate: Option<f64>,
     pub net_difficulty: Option<f64>,
     pub fee_fastest: Option<f64>,
     pub fee_hour: Option<f64>,
     pub fee_half_hour: Option<f64>,
+    pub fee_economy: Option<f64>,
+    pub fee_minimum: Option<f64>,
+    pub mempool: Option<MempoolInfo>,
+    pub last_block: Option<BlockInfo>,
+    pub diff_adj: Option<DiffAdjustment>,
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct MempoolInfo {
+    pub count: u64,
+    /// Total virtual size, vB.
+    pub vsize: f64,
+    /// vB of transactions paying at least the minimum recommended fee
+    /// (the part that actually competes for block space).
+    pub backlog_vsize: f64,
+    /// Projected next block: (min, median, max) fee in sat/vB and tx count.
+    pub next_block: Option<(f64, f64, f64, u64)>,
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct BlockInfo {
+    pub height: u64,
+    pub hash: String,
+    pub pool: String,
+    /// Unix seconds.
+    pub time: u64,
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct DiffAdjustment {
+    pub progress_pct: f64,
+    pub change_pct: f64,
+    pub remaining_blocks: u64,
+    pub remaining_secs: f64,
 }
 
 pub struct AtomicF64(AtomicU64);
@@ -84,6 +119,7 @@ pub struct Shared {
     pub pool_diff: AtomicF64,
     pub pool_status: Mutex<String>,
     pub pool_connected: AtomicBool,
+    pub connected_since: Mutex<Option<Instant>>,
     pub gpu_status: Mutex<String>,
     pub net: Mutex<NetInfo>,
     pub log: Mutex<Vec<String>>,
@@ -121,6 +157,7 @@ impl Shared {
             pool_diff: AtomicF64::new(1.0),
             pool_status: Mutex::new("Desconectado".into()),
             pool_connected: AtomicBool::new(false),
+            connected_since: Mutex::new(None),
             gpu_status: Mutex::new("Desligada".into()),
             net: Mutex::new(NetInfo::default()),
             log: Mutex::new(Vec::new()),
@@ -150,6 +187,16 @@ impl Shared {
         let job = self.job.read().unwrap().clone()?;
         let en2 = self.extranonce2_counter.fetch_add(1, Relaxed);
         Some((job.make_work(en2), generation))
+    }
+
+    pub fn set_connected(&self, c: bool) {
+        self.pool_connected.store(c, Relaxed);
+        let mut since = self.connected_since.lock().unwrap();
+        if !c {
+            *since = None;
+        } else if since.is_none() {
+            *since = Some(Instant::now());
+        }
     }
 
     pub fn hashrate(&self) -> f64 {

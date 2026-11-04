@@ -22,7 +22,7 @@ Funciona em **macOS, Linux e Windows**.
     processador quando existem (ARMv8 / SHA-NI).
   - **GPU**: % de uso (duty cycle) de um compute shader WGSL (wgpu → Metal / Vulkan / DX12).
     A GPU vem **desligada** por padrão e só é usada se for selecionada.
-- Bandeja do sistema: mostrar/ocultar, pausar/retomar, sair. No macOS o hashrate aparece na barra de menus.
+- Bandeja do sistema como mini painel: bolinha de estado, estatísticas da mineração, **ocupação da rede e a taxa para usar agora** (com o custo em sats, US$ e R$) e controles rápidos de CPU/GPU. No macOS os campos escolhidos aparecem na barra de menus.
 - Janela sem bordas, opção "sempre no topo", zoom 1x–2.5x, iniciar escondido.
 - Logotipo Go BTC discreto no canto superior esquerdo; clicar abre https://gobtc.com.br.
 - Dados de rede (preço, altura, hashrate global, taxas, halving) do mempool.space.
@@ -113,6 +113,7 @@ Variáveis úteis para desenvolvimento:
 
 - `NERDMINER_CONFIG=/caminho/config.json`: usa outro arquivo de configuração.
 - `NERDMINER_SHOTS=/diretório`: salva capturas (RGBA bruto) de cada tela e encerra.
+- `NERDMINER_TRAY_DUMP=1`: imprime o menu da bandeja (título, dica e cada linha) no stderr a cada atualização.
 
 ### A pool não conecta
 

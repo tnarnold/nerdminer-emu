@@ -93,7 +93,8 @@
     Promise.allSettled([
       getJSON("https://mempool.space/api/blocks/tip/height"),
       getJSON("https://mempool.space/api/v1/mining/hashrate/3d"),
-      getJSON("https://mempool.space/api/v1/prices")
+      getJSON("https://mempool.space/api/v1/prices"),
+      getJSON("https://api.coinbase.com/v2/prices/BTC-BRL/spot")
     ]).then(function (r) {
       if (r[0].status === "fulfilled") net.height = r[0].value;
       if (r[1].status === "fulfilled" && r[1].value.currentDifficulty) {
@@ -101,7 +102,8 @@
         net.hash = r[1].value.currentHashrate;
         net.live = true;
       }
-      if (r[2].status === "fulfilled") { net.usd = r[2].value.USD; net.brl = r[2].value.BRL; }
+      if (r[2].status === "fulfilled") net.usd = r[2].value.USD;
+      if (r[3].status === "fulfilled") net.brl = parseFloat(r[3].value.data.amount) || null;
       renderTicker();
       renderCalc();
     });

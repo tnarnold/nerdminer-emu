@@ -196,14 +196,76 @@ rejeitados, nova melhor dificuldade e erros. É o primeiro lugar para olhar quan
 ## 6. Bandeja do sistema
 
 O app coloca um ícone na bandeja do sistema (barra de menus no macOS, área de notificação no
-Windows, StatusNotifier no Linux). O menu tem:
+Windows, StatusNotifier no Linux). Ela funciona como um pequeno painel em texto, então você quase
+não precisa abrir a janela.
 
-- **Ocultar janela / Mostrar janela**
-- **Pausar mineração / Retomar mineração**
-- **Sair**
+**Bolinha de estado** no ícone: 🟢 minerando · 🟡 conectando · 🔴 sem pool (falta o endereço ou deu
+erro) · ⚪ pausado.
 
-A dica do ícone mostra o hashrate atual. No **macOS** o hashrate também aparece como texto ao lado
-do ícone na barra de menus. No **Windows e Linux**, um duplo clique no ícone mostra/esconde a janela.
+**Texto na barra de menus (só no macOS).** Ao lado do ícone aparecem os campos marcados em *Barra
+de menus mostra*. Padrão: hashrate + taxa recomendada, por exemplo ` 82.4 MH/s · ⛽🟢 1 sat/vB`.
+
+| Campo | Exemplo | Significado |
+|---|---|---|
+| Hashrate | `82.4 MH/s` | seu hashrate atual (`Pausado` quando pausado) |
+| Taxa recomendada | `⛽🟢 1 sat/vB` | taxa para usar agora; a bolinha é a ocupação da rede |
+| Último bloco | `⛓ 4m` | minutos desde o último bloco da rede |
+| Melhor dificuldade | `★ 0.133` | melhor share desta sessão |
+| Preço | `R$ 431k` | preço do BTC (em real, ou dólar se o real não estiver disponível) |
+
+No **Windows e Linux** a bandeja não mostra texto: passe o mouse sobre o ícone para ver uma dica
+com o mesmo resumo, e dê um duplo clique para mostrar/esconder a janela.
+
+**O menu** (as linhas se atualizam a cada segundo com o menu aberto):
+
+```
+● Minerando — public-pool.io · 3 h 12
+Hashrate   82.4 MH/s   (CPU 26.1 MH/s · GPU 56.3 MH/s)
+Melhor dificuldade   0.133
+Shares   12 (32 bits) · aceitas 3 · blocos 0
+Chance hoje   1 em 92,2 bi · bloco a cada ~252 mi anos
+─────
+Bloco   #974.516 · AntPool · há 2 min
+Ajuste de dificuldade   39% · −2,66% em ~8,8 dias (1.228 blocos)
+BTC   US$ 78.454 · R$ 430.462
+─────
+REDE BITCOIN   🟢 Livre
+Fila pagante   ▕███░░░░░░░░░░░░░▏ 0,84 bloco · ~10 min para limpar
+Mempool   47,3 mil tx · 11,4 vMB (maioria abaixo de 1 sat/vB)
+Próximo bloco   0,12 – 137 sat/vB · mediana 1,3 · 4,3 mil tx
+TAXA PARA ENVIAR AGORA   (Simples 1→2, SegWit · 141 vB)
+🚀 Próximo bloco (~10 min)   2 sat/vB · 282 sats ≈ US$ 0,22 · R$ 1,21
+⏱ ~30 min   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
+🕐 ~1 hora   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
+🐢 Sem pressa   1 sat/vB · 141 sats ≈ US$ 0,11 · R$ 0,61
+✅ Recomendado: 1 sat/vB — rede livre, não pague mais
+─────
+Dispositivo ▸ · Uso da CPU ▸ · Uso da GPU ▸ · Tamanho da transação ▸ · Barra de menus mostra ▸
+Pausar mineração · Ver na pool… · Ver no mempool.space… · Ocultar janela · Sair
+```
+
+**Ocupação da rede.** O tamanho total do mempool engana (boa parte pode ser de transações pagando
+menos que a taxa mínima, que não disputam espaço). O app conta só as transações que pagam pelo
+menos a taxa mínima recomendada e mede essa fila em blocos (1 bloco = 1 MvB, ~10 min):
+
+| Nível | Fila pagante | Taxa recomendada |
+|---|---|---|
+| 🟢 Livre | ≤ 1 bloco | *Sem pressa*: pagar mais não adianta |
+| 🟡 Moderada | 1–6 blocos (~1 h) | *~30 min* |
+| 🟠 Congestionada | 6–36 blocos (~6 h) | *~1 hora*; taxa baixa pode demorar horas |
+| 🔴 Muito congestionada | > 36 blocos | *~1 hora*; envie só se for urgente |
+
+**Custo para enviar** = taxa × tamanho da transação, em sats, US$ e R$. Escolha o tamanho em
+*Tamanho da transação*: simples SegWit 1→2 (141 vB, padrão), Taproot 1→2 (154 vB) ou consolidação
+5→1 (382 vB).
+
+**Controles rápidos** (aplicados na hora e salvos): *Dispositivo* (CPU / GPU / CPU + GPU),
+*Uso da CPU* (10–100 % por thread), *Uso da GPU* (10–100 %). *Ver na pool…* abre sua página de
+estatísticas no public-pool.io ou no solo.ckpool.org; *Ver no mempool.space…* abre o último bloco.
+
+Fontes: mempool.space (blocos, mempool, taxas, dificuldade, preço em dólar) e Coinbase, com a
+Binance como reserva, para BTC/BRL. Taxas e mempool são atualizados a cada 30 s; o resto, a cada
+60 s.
 
 Escondido, o app continua minerando normalmente.
 
@@ -293,6 +355,8 @@ Dá para editar com o app fechado. Campos que faltarem usam o valor padrão.
 | `start_hidden` | `false` | Iniciar escondido na bandeja. |
 | `start_paused` | `false` | Iniciar pausado (atualizado automaticamente pelo botão de pausa). |
 | `zoom` | `1.5` | Zoom da tela (1.0–2.5). |
+| `tray_fields` | `["hashrate", "fee"]` | Campos na barra de menus (macOS): `hashrate`, `fee`, `last_block`, `best_diff`, `price`. |
+| `tx_vbytes` | `141` | Tamanho da transação usado no "custo para enviar", em vB. |
 
 Para voltar tudo ao padrão, feche o app e apague o arquivo.
 

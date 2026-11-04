@@ -21,7 +21,7 @@ pub fn spawn(shared: Arc<Shared>) {
                 let cfg = shared.config.read().unwrap().clone();
                 if cfg.btc_address.trim().is_empty() {
                     shared.set_status("Configure seu endereço BTC");
-                    shared.pool_connected.store(false, Relaxed);
+                    shared.set_connected(false);
                     std::thread::sleep(Duration::from_millis(500));
                     continue;
                 }
@@ -29,7 +29,7 @@ pub fn spawn(shared: Arc<Shared>) {
                     shared.log(format!("Pool: {e}"));
                     shared.set_status(format!("Erro: {e}"));
                 }
-                shared.pool_connected.store(false, Relaxed);
+                shared.set_connected(false);
                 *shared.job.write().unwrap() = None;
                 shared.job_gen.fetch_add(1, Release);
                 // Wait a little before reconnecting unless config changed.
@@ -168,7 +168,7 @@ fn session(shared: &Arc<Shared>, generation: u64) -> Result<(), String> {
             }
             2 => {
                 if result.as_bool() == Some(true) {
-                    shared.pool_connected.store(true, Relaxed);
+                    shared.set_connected(true);
                     shared.set_status(format!("Conectado: {}", cfg.pool_host));
                     shared.log(format!("Autorizado como {user}"));
                 } else {

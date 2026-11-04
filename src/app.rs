@@ -1,11 +1,10 @@
 //! Desktop "device" UI that mimics the NerdMiner TFT screens.
 
 use crate::config::Config;
-use crate::fmt;
 use crate::miner::max_threads;
 use crate::screens::{Lcd, Screen, Screens};
 use crate::state::Shared;
-use crate::tray::{Tray, TrayCmd};
+use crate::tray::{Device, Tray, TrayCmd};
 use eframe::egui::{
     self, Color32, CornerRadius, Rect, Sense, Stroke, Vec2, ViewportCommand,
     WindowLevel,
@@ -121,6 +120,8 @@ impl NerdApp {
         cfg.start_hidden = self.draft.start_hidden;
         cfg.zoom = self.draft.zoom;
         cfg.start_paused = s.paused.load(Relaxed);
+        cfg.tray_fields = self.draft.tray_fields.clone();
+        cfg.tx_vbytes = self.draft.tx_vbytes;
         cfg.save();
     }
 
@@ -143,14 +144,62 @@ impl NerdApp {
             return;
         }
         self.last_tray_update = Instant::now();
-        let Some(t) = &self.tray else { return };
-        let paused = self.shared.paused.load(Relaxed);
-        let (v, u) = fmt::hashrate(self.shared.hashrate());
-        let text = if paused { "Pausado".to_string() } else { format!("{v} {u}") };
-        let _ = t.icon.set_tooltip(Some(format!("NerdMiner Emulator — {text}")));
-        #[cfg(target_os = "macos")]
-        t.icon.set_title(Some(format!(" {text}")));
-        t.pause_item.set_text(if paused { "Retomar mineração" } else { "Pausar mineração" });
+        if let Some(t) = &mut self.tray {
+            t.refresh(&self.shared);
+        }
+    }
+
+    fn handle_tray(&mut self, ctx: &egui::Context, cmd: TrayCmd) {
+        match cmd {
+            TrayCmd::Toggle => {
+                let v = !self.visible;
+                self.set_visible(ctx, v);
+            }
+            TrayCmd::Pause => self.toggle_pause(),
+            TrayCmd::Quit => self.quit(),
+            TrayCmd::Device(d) => {
+                self.draft.cpu_enabled = matches!(d, Device::Cpu | Device::Both);
+                self.draft.gpu_enabled = matches!(d, Device::Gpu | Device::Both);
+                self.persist_runtime();
+            }
+            TrayCmd::CpuUsage(p) => {
+                self.draft.cpu_usage = p;
+                self.persist_runtime();
+            }
+            TrayCmd::GpuUsage(p) => {
+                self.draft.gpu_usage = p;
+                self.persist_runtime();
+            }
+            TrayCmd::TxSize(vb) => {
+                self.draft.tx_vbytes = vb;
+                self.persist_runtime();
+            }
+            TrayCmd::Field(k) => {
+                let f = &mut self.draft.tray_fields;
+                if let Some(i) = f.iter().position(|x| x == k) {
+                    f.remove(i);
+                } else {
+                    // Keep the order of the menu, not the order of clicks.
+                    f.push(k.to_string());
+                    f.sort_by_key(|x| crate::tray::FIELDS.iter().position(|(key, _)| key == x));
+                }
+                self.persist_runtime();
+            }
+            TrayCmd::OpenPool => {
+                if let Some(u) = crate::tray::pool_url(&self.shared.config.read().unwrap()) {
+                    crate::tray::open_url(&u);
+                }
+            }
+            TrayCmd::OpenMempool => {
+                let hash = self.shared.net.lock().unwrap().last_block.as_ref().map(|b| b.hash.clone());
+                crate::tray::open_url(&match hash {
+                    Some(h) => format!("https://mempool.space/block/{h}"),
+                    None => "https://mempool.space/".into(),
+                });
+            }
+        }
+        // Reflect the change in the menu right away.
+        self.last_tray_update = Instant::now() - Duration::from_secs(10);
     }
 
     // ---------------------------------------------------------------- drawing
@@ -386,14 +435,7 @@ impl NerdApp {
 impl eframe::App for NerdApp {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         while let Ok(cmd) = self.tray_rx.try_recv() {
-            match cmd {
-                TrayCmd::Toggle => {
-                    let v = !self.visible;
-                    self.set_visible(ctx, v);
-                }
-                TrayCmd::Pause => self.toggle_pause(),
-                TrayCmd::Quit => self.quit(),
-            }
+            self.handle_tray(ctx, cmd);
         }
         self.update_tray();
         ctx.request_repaint_after(Duration::from_millis(500));
