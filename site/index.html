@@ -226,7 +226,7 @@
         <h3><span data-l="en">Live network data</span><span data-l="pt">Dados da rede ao vivo</span></h3>
         <p><span data-l="en">Price, block height, global hashrate, fees and halving countdown from mempool.space.</span><span data-l="pt">Preço, altura do bloco, hashrate global, taxas e contagem para o halving, via mempool.space.</span></p></div>
       <div class="feature reveal"><iconify-icon icon="solar:leaf-bold-duotone"></iconify-icon>
-        <h3><span data-l="en">~40 MB of RAM</span><span data-l="pt">~40 MB de RAM</span></h3>
+        <h3><span data-l="en">~50 MB of RAM</span><span data-l="pt">~50 MB de RAM</span></h3>
         <p><span data-l="en">Native Rust, single binary, no runtime. Memory stays flat over days of mining.</span><span data-l="pt">Rust nativo, binário único, sem runtime. A memória fica estável depois de dias minerando.</span></p></div>
     </div>
 
@@ -236,17 +236,20 @@
           <th><span data-l="en">Selection (MacBook Air M1)</span><span data-l="pt">Seleção (MacBook Air M1)</span></th>
           <th class="n"><span data-l="en">Process CPU</span><span data-l="pt">CPU do processo</span></th>
           <th class="n"><span data-l="en">% of machine</span><span data-l="pt">% da máquina</span></th>
-          <th class="n"><span data-l="en">Memory</span><span data-l="pt">Memória</span></th>
         </tr></thead>
         <tbody>
-          <tr><td><span data-l="en">CPU, 4 threads @ 50% (default)</span><span data-l="pt">CPU, 4 threads @ 50% (padrão)</span></td><td class="n">~180%</td><td class="n"><span class="bar" style="width:22px"></span>~22%</td><td class="n">~40 MB</td></tr>
-          <tr><td>CPU, 4 threads @ 100%</td><td class="n">~393%</td><td class="n"><span class="bar" style="width:49px"></span>~49%</td><td class="n">~41 MB</td></tr>
-          <tr><td>CPU, 1 thread @ 10%</td><td class="n">~9%</td><td class="n"><span class="bar" style="width:2px"></span>~1%</td><td class="n">~40 MB</td></tr>
-          <tr><td><span data-l="en">GPU only @ 30%</span><span data-l="pt">Só GPU @ 30%</span></td><td class="n">~2%</td><td class="n"><span class="bar" style="width:1px"></span>&lt;1%</td><td class="n">~41 MB</td></tr>
-          <tr><td>CPU 4 @ 50% + GPU @ 30%</td><td class="n">~179%</td><td class="n"><span class="bar" style="width:22px"></span>~22%</td><td class="n">~43 MB</td></tr>
+          <tr><td><span data-l="en">CPU, 4 threads @ 50% (default)</span><span data-l="pt">CPU, 4 threads @ 50% (padrão)</span></td><td class="n">~180%</td><td class="n"><span class="bar" style="width:22px"></span>~22%</td></tr>
+          <tr><td>CPU, 4 threads @ 100%</td><td class="n">~393%</td><td class="n"><span class="bar" style="width:49px"></span>~49%</td></tr>
+          <tr><td>CPU, 1 thread @ 10%</td><td class="n">~9%</td><td class="n"><span class="bar" style="width:2px"></span>~1%</td></tr>
+          <tr><td><span data-l="en">GPU only @ 30%</span><span data-l="pt">Só GPU @ 30%</span></td><td class="n">~2%</td><td class="n"><span class="bar" style="width:1px"></span>&lt;1%</td></tr>
+          <tr><td>CPU 4 @ 50% + GPU @ 30%</td><td class="n">~179%</td><td class="n"><span class="bar" style="width:22px"></span>~22%</td></tr>
         </tbody>
       </table>
     </div>
+    <p class="src-note reveal">
+      <span data-l="en"><b>Examples, not a promise.</b> Measured on one MacBook Air M1 with the settings in each row. Your numbers depend on your computer and on what you choose: device, threads, % per thread and % of GPU. These columns count CPU only, so "GPU only" looks almost free here even though the graphics card is working and drawing power. <a href="#faq">See the FAQ on consumption</a>.</span>
+      <span data-l="pt"><b>São exemplos, não uma promessa.</b> Medido em um MacBook Air M1, com as configurações de cada linha. Seus números dependem do seu computador e do que você escolher: dispositivo, threads, % por thread e % da GPU. Estas colunas contam só a CPU, então "Só GPU" parece quase de graça aqui, mesmo com a placa trabalhando e gastando energia. <a href="#faq">Veja o FAQ sobre consumo</a>.</span>
+    </p>
   </div>
 </section>
 
@@ -499,6 +502,28 @@ cargo run --release</pre>
         <div class="a">
           <p data-l="en">Almost certainly not. Solo mining with a computer is a lottery with very long odds; the electricity you spend will likely be worth more than what you "earn" on average. Do it for fun and learning. If you hit a block, celebrate.</p>
           <p data-l="pt">Quase certamente não. Minerar solo com um computador é uma loteria com chances muito baixas; a energia gasta provavelmente vale mais do que o que você "ganha" na média. Faça por diversão e aprendizado. Se achar um bloco, comemore.</p>
+        </div>
+      </details>
+      <details>
+        <summary><span data-l="en">How much does the app consume?</span><span data-l="pt">Quanto o app consome?</span></summary>
+        <div class="a">
+          <p data-l="en"><b>It depends on your settings.</b> The app uses what you allow: the device (CPU, GPU or both), the number of threads, the % per thread and the % of GPU. More usage means more hashes, more heat and more power. You can change all of it live, without restarting.</p>
+          <p data-l="pt"><b>Depende da sua configuração.</b> O app usa o que você permitir: o dispositivo (CPU, GPU ou os dois), o número de threads, a % por thread e a % da GPU. Mais uso significa mais hashes, mais calor e mais energia. Dá para mudar tudo ao vivo, sem reiniciar.</p>
+          <p data-l="en">The same settings also behave differently on each computer. The table in <a href="#features">Features</a> shows examples from a MacBook Air M1 only. <b>Memory</b> is the one number that barely depends on them: about 50 MB in v0.4.0, plus about 130 MB while the Mining Lab is open.</p>
+          <p data-l="pt">A mesma configuração também se comporta de forma diferente em cada computador. A tabela em <a href="#features">Recursos</a> mostra exemplos de um MacBook Air M1, e só. A <b>memória</b> é o número que menos depende disso: cerca de 50 MB na v0.4.0, mais uns 130 MB enquanto o Laboratório estiver aberto.</p>
+          <p data-l="en">To use less: lower the threads or percentages, turn the GPU off, or pause mining. Hiding the window in the tray does not reduce mining.</p>
+          <p data-l="pt">Para consumir menos: reduza as threads ou as porcentagens, desligue a GPU ou pause a mineração. Esconder a janela na bandeja não reduz a mineração.</p>
+        </div>
+      </details>
+      <details>
+        <summary><span data-l="en">How much will it add to my power bill?</span><span data-l="pt">Quanto isso soma na conta de luz?</span></summary>
+        <div class="a">
+          <p data-l="en">We can't give one number: it depends on your computer, your settings, how many hours you mine and your electricity rate. The app does not show watts yet; an estimate is planned.</p>
+          <p data-l="pt">Não dá para cravar um número: depende do seu computador, da configuração, de quantas horas você minera e da sua tarifa. O app ainda não mostra watts; uma estimativa está planejada.</p>
+          <p data-l="en">The math is: <b>extra watts × hours ÷ 1000 × price per kWh</b>. As an example of the math, not a measurement: 30 extra watts, 24 hours a day for 30 days, is 21.6 kWh. At $0.20 per kWh, that is $4.32 a month. A desktop with a dedicated GPU at full power can draw much more.</p>
+          <p data-l="pt">A conta é: <b>watts a mais × horas ÷ 1000 × preço do kWh</b>. Como exemplo da conta, não como medição: 30 watts a mais, 24 horas por dia durante 30 dias, dão 21,6 kWh. A R$ 1,00 o kWh, são R$ 21,60 por mês. Um desktop com GPU dedicada no máximo pode gastar bem mais.</p>
+          <p data-l="en">For a real number, plug the computer into a power meter and compare the reading with mining paused and running.</p>
+          <p data-l="pt">Para um número real, ligue o computador em um medidor de tomada e compare a leitura com a mineração pausada e rodando.</p>
         </div>
       </details>
       <details>
