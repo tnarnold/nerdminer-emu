@@ -158,6 +158,8 @@ section { position: relative; padding: clamp(90px, 12vw, 150px) 0; }
 /* screens */
 .screens { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .screen-card { background: var(--panel); border: 1px solid var(--line-2); padding: 14px; transition: border-color .25s, transform .25s; }
+.lab-shots { grid-template-columns: repeat(3, 1fr); }
+.lab-shots.screens img { image-rendering: auto; }
 .screen-card:hover { border-color: rgba(255,90,31,.5); transform: translateY(-3px); }
 .screen-card img { width: 100%; height: auto; image-rendering: pixelated; border-radius: 6px; }
 .screen-card .cap { display: flex; justify-content: space-between; margin-top: 14px; font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
@@ -374,6 +376,7 @@ footer .cols { display: flex; flex-wrap: wrap; gap: 14px 30px; }
 /* ---------- responsive ---------- */
 @media (max-width: 1000px) {
   .screens { grid-template-columns: repeat(2, 1fr); }
+  .lab-shots { grid-template-columns: 1fr; }
   .split { grid-template-columns: 1fr; gap: 48px; }
   .calc { position: relative; top: 0; }
   .features { grid-template-columns: repeat(2, 1fr); }

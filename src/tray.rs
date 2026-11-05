@@ -52,6 +52,7 @@ pub enum TrayCmd {
     Field(&'static str),
     OpenPool,
     OpenMempool,
+    OpenLab,
 }
 
 fn parse_cmd(id: &str) -> Option<TrayCmd> {
@@ -62,6 +63,7 @@ fn parse_cmd(id: &str) -> Option<TrayCmd> {
         "quit" => TrayCmd::Quit,
         "pool" => TrayCmd::OpenPool,
         "mempool" => TrayCmd::OpenMempool,
+        "lab" => TrayCmd::OpenLab,
         "dev" => TrayCmd::Device(match arg {
             "cpu" => Device::Cpu,
             "gpu" => Device::Gpu,
@@ -339,9 +341,10 @@ fn build_menu() -> Result<(Menu, Parts), String> {
     let pause_item = MenuItem::with_id("pause", t.pause_mining, true, None);
     let pool_item = MenuItem::with_id("pool", t.open_pool, true, None);
     let mempool_item = MenuItem::with_id("mempool", t.open_mempool, true, None);
+    let lab_item = MenuItem::with_id("lab", t.open_lab, true, None);
     let toggle_item = MenuItem::with_id("toggle", t.hide_window, true, None);
     let quit_item = MenuItem::with_id("quit", t.quit, true, None);
-    for i in [&pause_item, &pool_item, &mempool_item, &toggle_item] {
+    for i in [&pause_item, &lab_item, &pool_item, &mempool_item, &toggle_item] {
         menu.append(i).map_err(e)?;
     }
     menu.append(&sep()).map_err(e)?;
@@ -686,6 +689,7 @@ mod tests {
 
     #[test]
     fn menu_ids_round_trip() {
+        assert!(matches!(parse_cmd("lab"), Some(TrayCmd::OpenLab)));
         assert!(matches!(parse_cmd("cpu:25"), Some(TrayCmd::CpuUsage(25))));
         assert!(matches!(parse_cmd("dev:both"), Some(TrayCmd::Device(Device::Both))));
         assert!(matches!(parse_cmd("tx:154"), Some(TrayCmd::TxSize(154))));

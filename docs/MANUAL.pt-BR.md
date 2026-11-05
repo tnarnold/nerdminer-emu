@@ -11,11 +11,12 @@ funciona por dentro. Para instalar, veja o [README](../README.pt-BR.md#instalar)
 - [4. As telas](#4-as-telas)
 - [5. Configurações (⚙)](#5-configurações-)
 - [6. Bandeja do sistema](#6-bandeja-do-sistema)
-- [7. Como funciona](#7-como-funciona)
-- [8. Acompanhando na pool](#8-acompanhando-na-pool)
-- [9. Iniciar junto com o sistema](#9-iniciar-junto-com-o-sistema)
-- [10. Arquivo de configuração](#10-arquivo-de-configuração)
-- [11. Solução de problemas](#11-solução-de-problemas)
+- [7. Como funciona a mineração (laboratório 3D)](#7-como-funciona-a-mineração-laboratório-3d)
+- [8. Como o app funciona](#8-como-o-app-funciona)
+- [9. Acompanhando na pool](#9-acompanhando-na-pool)
+- [10. Iniciar junto com o sistema](#10-iniciar-junto-com-o-sistema)
+- [11. Arquivo de configuração](#11-arquivo-de-configuração)
+- [12. Solução de problemas](#12-solução-de-problemas)
 
 ---
 
@@ -70,6 +71,7 @@ O que você **não** precisa:
 | Tela | **Clique** para ir à próxima tela (como o botão do aparelho). **Arraste** para mover a janela. |
 | **◀ / ▶** | Tela anterior / próxima. |
 | **⏸ Pausar** / **▶ Minerar** | Pausa / retoma a mineração (CPU e GPU). O estado fica salvo: se você sair com o app pausado, ele abre pausado na próxima vez. |
+| **🎓** | Abre o laboratório 3D que explica a mineração ([seção 7](#7-como-funciona-a-mineração-laboratório-3d)). |
 | **⚙** | Abre/fecha o painel de configurações. |
 | **📌** | Mantém a janela sempre por cima das outras. |
 | **Esconder** | Esconde a janela na bandeja do sistema (só aparece se houver bandeja disponível). |
@@ -92,7 +94,7 @@ atualizados a cada 60 segundos.
 | Campo | Significado |
 |---|---|
 | Relógio (barra superior) | Hora local. |
-| Bolinha ao lado do wifi | **Verde** = conectado e autorizado na pool. **Vermelha** = sem conexão (veja [Solução de problemas](#11-solução-de-problemas)). |
+| Bolinha ao lado do wifi | **Verde** = conectado e autorizado na pool. **Vermelha** = sem conexão (veja [Solução de problemas](#12-solução-de-problemas)). |
 | **Block templates** | Quantos trabalhos (`mining.notify`) a pool enviou. Cada bloco novo na rede ou atualização do modelo aumenta o número. Se não aumenta, você não está recebendo trabalho. |
 | **Best difficulty** | A maior dificuldade entre todos os hashes encontrados desde que o app abriu. É o "mais perto que você chegou" de um bloco. |
 | **32BITs shares** | Hashes cujos 32 bits mais significativos são zero (dificuldade ≥ 1). É a estatística clássica do NerdMiner. |
@@ -272,7 +274,38 @@ Binance como reserva, para BTC/BRL. Taxas e mempool são atualizados a cada 30 s
 
 Escondido, o app continua minerando normalmente.
 
-## 7. Como funciona
+## 7. Como funciona a mineração (laboratório 3D)
+
+Clique em **🎓** na janela ou em **🎓 Como funciona a mineração…** na bandeja. Abre uma janela separada que ensina o processo com animação 3D, usando o que o seu minerador está fazendo agora.
+
+São 8 etapas de uma linha de montagem:
+
+| # | Etapa | Pergunta |
+|---|---|---|
+| 1 | Mempool | De onde vêm as transações? |
+| 2 | Bloco candidato | Como milhares de transações viram um resumo só? |
+| 3 | Cabeçalho | O que exatamente é minerado? |
+| 4 | Nonce | O que muda a cada tentativa? |
+| 5 | SHA-256 duplo | Dá para prever o resultado? |
+| 6 | Alvo | Quando um hash é vencedor? |
+| 7 | Corrida | Contra quem você está competindo? |
+| 8 | Corrente | O que acontece quando alguém ganha? |
+
+- **Tour guiado:** avance com ◀ ▶, com as setas do teclado ou com a reprodução automática.
+- **Ao vivo:** a câmera percorre a linha sozinha e os eventos reais aparecem no canto: novo bloco na rede, share aceita, novo recorde.
+- **Básico / Técnico:** troca o texto entre a explicação com analogias e os detalhes do protocolo.
+- **Na etapa 5,** o botão **Testar o próximo nonce** mostra o efeito avalanche: mudar o nonce em 1 vira cerca de metade dos 256 bits.
+- **Na cena:** arraste para girar e role para aproximar.
+
+**Os dados são reais?** Cabeçalho, nonce, hash, dificuldades e números da rede, sim: a cada 1/8 de segundo o app reconstrói um hash que o minerador acabou de testar. A velocidade não: é uma amostra, e o canto da cena mostra a proporção. Os cubos da mempool, a árvore de Merkle e a esfera da rede são ilustrações.
+
+**Fundo claro ou escuro?** Os botões **Claro** e **Escuro**, abaixo das etapas, trocam o estúdio da cena e o painel de texto. O app volta ao fundo claro quando o laboratório é reaberto.
+
+**Sem pool ou pausado,** o laboratório entra em modo demonstração com o bloco gênese de 2009 e avisa na tela. Ele funciona offline, o que é útil em aula.
+
+**Memória, CPU e GPU:** o laboratório não usa memória até ser aberto. Aberto, ocupa cerca de 110 a 130 MB a mais, limita-se a 30 quadros por segundo e para de animar quando minimizado. Ao fechar, o app libera tudo o que criou, mas o sistema pode manter cerca de 30 MB do driver gráfico até o app ser encerrado; esse valor não cresce se você abrir e fechar de novo. Com a GPU minerando a 100%, o laboratório aberto reduz o hashrate em cerca de 20 a 25%, porque divide a placa com a cena.
+
+## 8. Como o app funciona
 
 ```
  mempool.space ──HTTPS──► dados da rede (telas)
@@ -304,7 +337,7 @@ Escondido, o app continua minerando normalmente.
 7. **Resiliência.** Se a conexão cai, o app reconecta depois de alguns segundos. Se a pool fica
    5 minutos sem enviar nada, ele reconecta. Shares de um trabalho desatualizado são descartados.
 
-## 8. Acompanhando na pool
+## 9. Acompanhando na pool
 
 Pools solo mostram suas estatísticas pelo endereço:
 
@@ -315,7 +348,7 @@ Cada nome de worker aparece separado, o que ajuda quando você roda o emulador e
 O hashrate mostrado pela pool é uma estimativa feita a partir dos shares, por isso oscila mais que
 o número da tela.
 
-## 9. Iniciar junto com o sistema
+## 10. Iniciar junto com o sistema
 
 Ative **Iniciar escondido na bandeja** para o app abrir direto na bandeja e depois:
 
@@ -331,7 +364,7 @@ Ative **Iniciar escondido na bandeja** para o app abrir direto na bandeja e depo
   Exec=/caminho/para/nerdminer-emu
   ```
 
-## 10. Arquivo de configuração
+## 11. Arquivo de configuração
 
 As configurações ficam salvas em JSON:
 
@@ -365,7 +398,7 @@ Dá para editar com o app fechado. Campos que faltarem usam o valor padrão.
 
 Para voltar tudo ao padrão, feche o app e apague o arquivo.
 
-## 11. Solução de problemas
+## 12. Solução de problemas
 
 **A bolinha da tela Miner está vermelha / Block templates fica em 0**
 

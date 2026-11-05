@@ -26,6 +26,7 @@ Funciona em **macOS, Linux e Windows**.
 - Janela sem bordas, opção "sempre no topo", zoom 1x–2.5x, iniciar escondido.
 - Logotipo Go BTC discreto no canto superior esquerdo; clicar abre https://gobtc.com.br.
 - Preço do BTC na sua moeda (BRL, USD, EUR, GBP, CAD, CHF, AUD, JPY).
+- **Laboratório 3D** que ensina como a mineração funciona, em 8 etapas, com os hashes reais do seu minerador. Não ocupa memória até ser aberto.
 - Interface em **português e inglês**, seguindo o idioma do sistema (dá para trocar no app). Adicionar um idioma é um arquivo só: `src/i18n.rs`.
 - Dados de rede (preço, altura, hashrate global, taxas, halving) do mempool.space.
 
@@ -116,6 +117,11 @@ Variáveis úteis para desenvolvimento:
 - `NERDMINER_CONFIG=/caminho/config.json`: usa outro arquivo de configuração.
 - `NERDMINER_SHOTS=/diretório`: salva capturas (RGBA bruto) de cada tela e encerra.
 - `NERDMINER_TRAY_DUMP=1`: imprime o menu da bandeja (título, dica e cada linha) no stderr a cada atualização.
+- `NERDMINER_LAB=1`: abre o laboratório 3D ao iniciar. Com `NERDMINER_LAB_SHOTS=/diretório`, salva uma captura de cada etapa e encerra.
+- `NERDMINER_LAB_CYCLE=1`: abre e fecha o laboratório a cada 5 s, para conferir a liberação de memória (`once` abre uma única vez).
+- `NERDMINER_LAB_LOOK=dark`: abre o laboratório no fundo escuro.
+- `NERDMINER_LAB_BENCH=1`: registra os quadros por segundo sem limite (`cap` mantém o limite de 30, `live` começa na visão ao vivo).
+- `NERDMINER_RATE_LOG=1`: imprime o hashrate a cada 5 s.
 
 ### A pool não conecta
 
@@ -151,6 +157,7 @@ nonce real do bloco gênese.
 | `src/app.rs` | janela, barra de ferramentas e configurações |
 | `src/tray.rs` | bandeja do sistema (bolinha de estado, campos da barra de menus, painel de rede/taxas) |
 | `src/i18n.rs` | textos da interface (português, inglês) |
+| `src/lab/` | laboratório 3D: renderizador wgpu, as 8 etapas, amostras reais e as lições |
 | `src/currency.rs` | moedas de exibição |
 | `src/netinfo.rs` | dados da rede via mempool.space |
 

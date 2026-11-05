@@ -1,6 +1,6 @@
 //! CPU mining threads with live-adjustable thread count and duty cycle.
 
-use crate::state::Shared;
+use crate::state::{Shared, pack_sample};
 use crate::work::{Hasher, top32_threshold, verify};
 use std::sync::Arc;
 use std::sync::atomic::Ordering::*;
@@ -53,6 +53,7 @@ fn cpu_worker(shared: Arc<Shared>, idx: usize) {
                 }
             }
             shared.hashes_cpu.fetch_add((end - nonce) as u64, Relaxed);
+            shared.live_sample.store(pack_sample(work.en2, end - 1), Relaxed);
             if end == u32::MAX {
                 continue 'outer; // nonce space exhausted -> new extranonce2
             }

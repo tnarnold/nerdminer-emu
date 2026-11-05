@@ -15,11 +15,12 @@ works under the hood. For installation see the [README](../README.md#install).
 - [4. The screens](#4-the-screens)
 - [5. Settings (⚙)](#5-settings-)
 - [6. System tray](#6-system-tray)
-- [7. How it works](#7-how-it-works)
-- [8. Following your miner on the pool](#8-following-your-miner-on-the-pool)
-- [9. Start automatically at login](#9-start-automatically-at-login)
-- [10. Configuration file](#10-configuration-file)
-- [11. Troubleshooting](#11-troubleshooting)
+- [7. How mining works (3D lab)](#7-how-mining-works-3d-lab)
+- [8. How the app works](#8-how-the-app-works)
+- [9. Following your miner on the pool](#9-following-your-miner-on-the-pool)
+- [10. Start automatically at login](#10-start-automatically-at-login)
+- [11. Configuration file](#11-configuration-file)
+- [12. Troubleshooting](#12-troubleshooting)
 
 ---
 
@@ -74,6 +75,7 @@ What you **don't** need:
 | Screen | **Click** to go to the next screen (like the device button). **Drag** to move the window. |
 | **◀ / ▶** | Previous / next screen. |
 | **⏸ Pausar** / **▶ Minerar** | Pause / resume mining (CPU and GPU). The state is remembered: if you quit while paused, the app starts paused next time. |
+| **🎓** | Opens the 3D lab that explains mining ([section 7](#7-how-mining-works-3d-lab)). |
 | **⚙** | Opens/closes the settings panel. |
 | **📌** | Keep the window always on top of other windows. |
 | **Esconder** (hide) | Hides the window in the system tray (only shown if a tray is available). |
@@ -96,7 +98,7 @@ starts. Network data (price, block height, fees…) comes from mempool.space and
 | Field | Meaning |
 |---|---|
 | Clock (top bar) | Local time. |
-| Dot next to the wifi icon | **Green** = connected and authorized on the pool. **Red** = not connected (see [Troubleshooting](#11-troubleshooting)). |
+| Dot next to the wifi icon | **Green** = connected and authorized on the pool. **Red** = not connected (see [Troubleshooting](#12-troubleshooting)). |
 | **Block templates** | How many jobs (`mining.notify`) the pool has sent. Each new Bitcoin block or template update increments it. If it doesn't grow, you're not receiving work. |
 | **Best difficulty** | The highest difficulty among all hashes found since the app started. It's the "closest you got" to a block. |
 | **32BITs shares** | Hashes whose 32 most significant bits are zero (difficulty ≥ 1). It's the classic NerdMiner statistic. |
@@ -273,7 +275,38 @@ CHF, AUD, JPY) and Coinbase, with Binance as a fallback, for BTC/BRL. Fees and m
 
 While hidden, the app keeps mining normally.
 
-## 7. How it works
+## 7. How mining works (3D lab)
+
+Click **🎓** in the window, or **🎓 How mining works…** in the tray. A separate window teaches the process with a 3D animation, using what your miner is doing right now.
+
+It has 8 steps along an assembly line:
+
+| # | Step | Question |
+|---|---|---|
+| 1 | Mempool | Where do transactions come from? |
+| 2 | Candidate block | How do thousands of transactions become one summary? |
+| 3 | Header | What exactly gets mined? |
+| 4 | Nonce | What changes on each attempt? |
+| 5 | Double SHA-256 | Can the result be predicted? |
+| 6 | Target | When does a hash win? |
+| 7 | The race | Who are you competing against? |
+| 8 | The chain | What happens when someone wins? |
+
+- **Guided tour:** move with ◀ ▶, the arrow keys or autoplay.
+- **Live:** the camera travels the line by itself and real events appear in the corner: a new network block, an accepted share, a new record.
+- **Basic / Technical:** switches the text between analogies and protocol details.
+- **On step 5,** the **Test the next nonce** button shows the avalanche effect: changing the nonce by 1 flips about half of the 256 bits.
+- **In the scene:** drag to rotate and scroll to zoom.
+
+**Is the data real?** Header, nonce, hash, difficulties and network numbers, yes: every 1/8 of a second the app rebuilds a hash the miner just tested. The speed is not: it is a sample, and the corner of the scene shows the ratio. The mempool cubes, the Merkle tree and the network sphere are illustrations.
+
+**Light or dark background?** The **Light** and **Dark** buttons under the steps switch the scene's studio and the text panel. The lab goes back to the light background when it is reopened.
+
+**With no pool or while paused,** the lab switches to a demonstration with the 2009 genesis block and says so on screen. It works offline, which helps in a classroom.
+
+**Memory, CPU and GPU:** the lab uses no memory until opened. While open it takes about 110 to 130 MB more, is capped at 30 frames per second and stops animating when minimized. On closing, the app frees everything it created, but the system may keep about 30 MB of graphics driver memory until the app quits; this does not grow if you open and close it again. With the GPU mining at 100%, an open lab lowers the hashrate by about 20 to 25%, because the scene shares the card.
+
+## 8. How the app works
 
 ```
  mempool.space ──HTTPS──► network data (screens)
@@ -305,7 +338,7 @@ While hidden, the app keeps mining normally.
 7. **Resilience.** If the connection drops, the app reconnects after a few seconds. If the pool
    sends nothing for 5 minutes, it reconnects. Shares for an outdated job are discarded.
 
-## 8. Following your miner on the pool
+## 9. Following your miner on the pool
 
 Solo pools show your statistics by address:
 
@@ -316,7 +349,7 @@ Each worker name appears separately, which helps when you run the emulator on se
 The pool's reported hashrate is an estimate based on shares, so it fluctuates more than the
 number on the screen.
 
-## 9. Start automatically at login
+## 10. Start automatically at login
 
 Turn on **Iniciar escondido na bandeja** (start hidden) so the app starts straight in the tray, then:
 
@@ -332,7 +365,7 @@ Turn on **Iniciar escondido na bandeja** (start hidden) so the app starts straig
   Exec=/path/to/nerdminer-emu
   ```
 
-## 10. Configuration file
+## 11. Configuration file
 
 Settings are saved as JSON:
 
@@ -366,7 +399,7 @@ You can edit it with the app closed. Missing fields use their default values.
 
 To reset everything, quit the app and delete the file.
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 **The dot on the Miner screen is red / Block templates stays at 0**
 

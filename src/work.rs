@@ -32,12 +32,23 @@ pub struct Job {
 pub struct WorkUnit {
     pub job_id: String,
     pub extranonce2: Vec<u8>,
+    /// Counter that produced `extranonce2`.
+    pub en2: u64,
     pub ntime: u32,
     pub header: [u8; 80],
     /// SHA-256 state after the first 64 bytes of the header.
     pub midstate: [u32; 8],
     pub pool_diff: f64,
     pub net_diff: f64,
+}
+
+/// Bitcoin genesis block header (the lab's offline demonstration).
+const GENESIS: &str = "0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c";
+
+pub fn genesis_header() -> [u8; 80] {
+    let mut header = [0u8; 80];
+    header.copy_from_slice(&hex::decode(GENESIS).expect("valid constant"));
+    header
 }
 
 pub fn sha256d(data: &[u8]) -> [u8; 32] {
@@ -117,6 +128,7 @@ impl Job {
         WorkUnit {
             job_id: self.job_id.clone(),
             extranonce2: en2,
+            en2: extranonce2_counter,
             ntime: self.ntime,
             header,
             midstate,
@@ -193,14 +205,9 @@ pub fn verify(w: &WorkUnit, nonce: u32) -> ([u8; 32], f64) {
 mod tests {
     use super::*;
 
-    // Bitcoin genesis block header.
-    const GENESIS: &str = "0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c";
-
     #[test]
     fn genesis_hash_and_midstate_path() {
-        let raw = hex::decode(GENESIS).unwrap();
-        let mut header = [0u8; 80];
-        header.copy_from_slice(&raw);
+        let header = genesis_header();
         let mut hash = sha256d(&header);
         hash.reverse();
         assert_eq!(
@@ -215,6 +222,7 @@ mod tests {
         let w = WorkUnit {
             job_id: String::new(),
             extranonce2: vec![],
+            en2: 0,
             ntime: 0,
             header,
             midstate,

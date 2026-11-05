@@ -26,6 +26,7 @@ Runs on **macOS, Linux and Windows**.
 - Borderless window, "always on top" option, 1x–2.5x zoom, start hidden.
 - Discreet Go BTC logo in the top-left corner; clicking it opens https://gobtc.com.br.
 - BTC price in your currency (BRL, USD, EUR, GBP, CAD, CHF, AUD, JPY).
+- **3D lab** that teaches how mining works in 8 steps, using your miner's real hashes. It takes no memory until opened.
 - Interface in **English and Portuguese**, following the system language (switchable in the app). Adding a language is one file: `src/i18n.rs`.
 - Network data (price, block height, global hashrate, fees, halving) from mempool.space.
 
@@ -119,6 +120,11 @@ Useful environment variables for development:
 - `NERDMINER_CONFIG=/path/config.json`: use a different configuration file.
 - `NERDMINER_SHOTS=/directory`: save raw RGBA screenshots of every screen, then exit.
 - `NERDMINER_TRAY_DUMP=1`: print the tray menu (title, tooltip, every line) to stderr on each refresh.
+- `NERDMINER_LAB=1`: open the 3D lab at startup. With `NERDMINER_LAB_SHOTS=/directory`, save a screenshot of each step, then exit.
+- `NERDMINER_LAB_CYCLE=1`: open and close the lab every 5 s, to check that memory is released (`once` opens it a single time).
+- `NERDMINER_LAB_LOOK=dark`: open the lab on the dark background.
+- `NERDMINER_LAB_BENCH=1`: log the lab's frame rate with no cap (`cap` keeps the 30 fps cap, `live` starts in the live view).
+- `NERDMINER_RATE_LOG=1`: print the hashrate every 5 s.
 
 ### The pool doesn't connect
 
@@ -154,6 +160,7 @@ block nonce.
 | `src/app.rs` | window, toolbar and settings |
 | `src/tray.rs` | system tray (status dot, menu bar fields, network/fee dashboard) |
 | `src/i18n.rs` | interface strings (English, Portuguese) |
+| `src/lab/` | 3D lab: wgpu studio renderer, the 8 steps, real samples and the lessons |
 | `src/currency.rs` | display currencies |
 | `src/netinfo.rs` | network data from mempool.space |
 

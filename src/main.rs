@@ -6,6 +6,7 @@ mod currency;
 mod fmt;
 mod gpu;
 mod i18n;
+mod lab;
 mod miner;
 mod netinfo;
 mod screens;

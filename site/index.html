@@ -47,6 +47,7 @@
       <a href="#lottery"><span data-l="en">Lottery mining</span><span data-l="pt">Loteria</span></a>
       <a href="#features"><span data-l="en">Features</span><span data-l="pt">Recursos</span></a>
       <a href="#status">Status</a>
+      <a href="#lab"><span data-l="en">Lab</span><span data-l="pt">Laboratório</span></a>
       <a href="#download">Download</a>
       <a href="#setup"><span data-l="en">Setup</span><span data-l="pt">Configurar</span></a>
       <a href="#faq">FAQ</a>
@@ -342,11 +343,46 @@
   </div>
 </section>
 
+<!-- ================= LAB ================= -->
+<section id="lab" class="rule">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="label"><span class="idx">05</span> <span data-l="en">New in v0.4 · Mining Lab</span><span data-l="pt">Novo na v0.4 · Laboratório de Mineração</span></span>
+      <h2 class="display"><span data-l="en">Watch mining<br><span class="slash">actually</span> work</span><span data-l="pt">Veja a mineração<br><span class="slash">funcionando</span></span></h2>
+      <p class="lead">
+        <span data-l="en">One click opens a 3D tour for students and enthusiasts: eight steps from the mempool to the blockchain, built from the work your miner is doing right now. Basic and technical explanations, in English and Portuguese, with no pool needed thanks to a demo using the 2009 genesis block.</span>
+        <span data-l="pt">Um clique abre um tour 3D para estudantes e entusiastas: oito etapas, do mempool à blockchain, montadas com o trabalho que o seu minerador está fazendo agora. Explicações básicas e técnicas, em português e inglês, e sem precisar de pool graças à demonstração com o bloco gênese de 2009.</span>
+      </p>
+    </div>
+    <div class="screens lab-shots">
+      <figure class="screen-card reveal" style="margin:0">
+        <img src="img/lab-merkle.jpg" alt="Mining Lab: Merkle tree" width="1200" height="750" loading="lazy">
+        <div class="cap"><span><span data-l="en">Candidate block</span><span data-l="pt">Bloco candidato</span></span><span>2</span></div>
+        <p><span data-l="en">Transactions merge in pairs into one Merkle root, and your reward sits in the coinbase.</span><span data-l="pt">As transações se juntam em pares até uma só raiz de Merkle, e sua recompensa está na coinbase.</span></p>
+      </figure>
+      <figure class="screen-card reveal" style="margin:0">
+        <img src="img/lab-sha.jpg" alt="Mining Lab: double SHA-256" width="1200" height="750" loading="lazy">
+        <div class="cap"><span><span data-l="en">Double SHA-256</span><span data-l="pt">SHA-256 duplo</span></span><span>5</span></div>
+        <p><span data-l="en">Add 1 to the nonce and see about half of the 256 bits flip. That is why there is no shortcut.</span><span data-l="pt">Some 1 ao nonce e veja cerca de metade dos 256 bits virar. É por isso que não existe atalho.</span></p>
+      </figure>
+      <figure class="screen-card reveal" style="margin:0">
+        <img src="img/lab-race.jpg" alt="Mining Lab: you against the network" width="1200" height="750" loading="lazy">
+        <div class="cap"><span><span data-l="en">The race</span><span data-l="pt">A corrida</span></span><span>7</span></div>
+        <p><span data-l="en">The whole network against you, with your real share and your real odds.</span><span data-l="pt">A rede inteira contra você, com a sua fatia real e as suas chances reais.</span></p>
+      </figure>
+    </div>
+    <p class="lead reveal" style="margin-top:28px">
+      <span data-l="en">Open it from the 🎓 button or the tray menu. The lab takes no memory until you open it.</span>
+      <span data-l="pt">Abra pelo botão 🎓 ou pelo menu da bandeja. O laboratório não ocupa memória até você abrir.</span>
+    </p>
+  </div>
+</section>
+
 <!-- ================= DOWNLOAD ================= -->
 <section id="download" class="rule">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="label"><span class="idx">05</span> Download</span>
+      <span class="label"><span class="idx">06</span> Download</span>
       <h2 class="display"><span data-l="en">Get your<br><span class="slash">ticket</span></span><span data-l="pt">Pegue seu<br><span class="slash">bilhete</span></span></h2>
       <p class="lead">
         <span data-l="en">Free and open source (MIT). Latest release: </span><span data-l="pt">Livre e open source (MIT). Versão mais recente: </span><b class="js-version-full">v0.1.0</b>
@@ -399,7 +435,7 @@ cargo run --release</pre>
 <section id="setup" class="rule">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="label"><span class="idx">06</span> <span data-l="en">Setup</span><span data-l="pt">Configuração</span></span>
+      <span class="label"><span class="idx">07</span> <span data-l="en">Setup</span><span data-l="pt">Configuração</span></span>
       <h2 class="display"><span data-l="en">Mining in<br>2 <span class="slash">minutes</span></span><span data-l="pt">Minerando em<br>2 <span class="slash">minutos</span></span></h2>
     </div>
 
@@ -454,7 +490,7 @@ cargo run --release</pre>
 <section id="faq" class="rule">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="label"><span class="idx">07</span> FAQ</span>
+      <span class="label"><span class="idx">08</span> FAQ</span>
       <h2 class="display"><span data-l="en">Honest <span class="slash">answers</span></span><span data-l="pt">Respostas <span class="slash">honestas</span></span></h2>
     </div>
     <div class="faq reveal">
@@ -498,6 +534,13 @@ cargo run --release</pre>
         <div class="a">
           <p data-l="en">No. It's an independent desktop emulator that reuses the interface of <a href="https://github.com/BitMaker-hub/NerdMiner_v2">NerdMiner v2</a> by BitMaker (MIT license). If you enjoy it, consider getting a real NerdMiner board: it's a great way to support the original project.</p>
           <p data-l="pt">Não. É um emulador de desktop independente que reutiliza a interface do <a href="https://github.com/BitMaker-hub/NerdMiner_v2">NerdMiner v2</a> da BitMaker (licença MIT). Se gostar, considere comprar uma placa NerdMiner de verdade: é um ótimo jeito de apoiar o projeto original.</p>
+        </div>
+      </details>
+      <details>
+        <summary><span data-l="en">Does the Mining Lab slow mining down?</span><span data-l="pt">O Laboratório deixa a mineração mais lenta?</span></summary>
+        <div class="a">
+          <p data-l="en">Only if the GPU is mining at full tilt. On a MacBook Air M1 we saw no visible loss on CPU only or with the GPU at 30%, and about 23% less hashrate with the GPU at 100%, because the 3D scene shares the GPU. While open it uses about 130 MB more memory. After closing, up to about 30 MB may remain, probably graphics driver caches; that amount does not grow if you open and close it again.</p>
+          <p data-l="pt">Só se a GPU estiver minerando no máximo. Num MacBook Air M1 não vimos queda visível só com CPU nem com a GPU a 30%, e o hashrate caiu cerca de 23% com a GPU a 100%, porque a cena 3D divide a GPU. Aberto, usa cerca de 130 MB a mais de memória. Depois de fechar, podem sobrar até uns 30 MB, provavelmente caches do driver gráfico; esse valor não cresce ao abrir e fechar de novo.</p>
         </div>
       </details>
     </div>

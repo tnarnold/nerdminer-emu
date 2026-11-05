@@ -1,7 +1,7 @@
 //! GPU miner using a wgpu compute shader (Metal / Vulkan / DX12).
 
 use crate::i18n::{fill, t};
-use crate::state::{GpuStatus, Shared};
+use crate::state::{GpuStatus, Shared, pack_sample};
 use crate::work::{WorkUnit, top32_threshold, verify};
 use std::sync::Arc;
 use std::sync::atomic::Ordering::*;
@@ -184,6 +184,7 @@ fn worker(shared: Arc<Shared>) {
             }
             let dt = t0.elapsed();
             shared.hashes_gpu.fetch_add(count as u64, Relaxed);
+            shared.live_sample.store(pack_sample(work.en2, (base + count as u64 - 1) as u32), Relaxed);
             base += count as u64;
 
             // adapt batch size so one dispatch takes ~TARGET_DISPATCH
@@ -225,6 +226,7 @@ mod tests {
         let w = WorkUnit {
             job_id: String::new(),
             extranonce2: vec![],
+            en2: 0,
             ntime: 0,
             header,
             midstate: mid,

@@ -128,6 +128,14 @@ impl AtomicF64 {
     }
 }
 
+pub fn pack_sample(en2: u64, nonce: u32) -> u64 {
+    (en2 << 32) | nonce as u64
+}
+
+pub fn unpack_sample(v: u64) -> (u64, u32) {
+    (v >> 32, v as u32)
+}
+
 pub struct Shared {
     pub config: RwLock<Config>,
     /// Bumped whenever pool settings change -> stratum reconnects.
@@ -149,6 +157,9 @@ pub struct Shared {
     pub started: Instant,
     pub hashes_cpu: AtomicU64,
     pub hashes_gpu: AtomicU64,
+    /// Last extranonce2 + nonce a miner tested, packed so the pair stays consistent.
+    /// Costs one store per chunk; read only by the lab window.
+    pub live_sample: AtomicU64,
     pub hashrate_cpu: AtomicF64,
     pub hashrate_gpu: AtomicF64,
     pub templates: AtomicU64,
@@ -187,6 +198,7 @@ impl Shared {
             started: Instant::now(),
             hashes_cpu: AtomicU64::new(0),
             hashes_gpu: AtomicU64::new(0),
+            live_sample: AtomicU64::new(0),
             hashrate_cpu: AtomicF64::new(0.0),
             hashrate_gpu: AtomicF64::new(0.0),
             templates: AtomicU64::new(0),

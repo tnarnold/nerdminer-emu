@@ -2,6 +2,7 @@
 
 use crate::config::Config;
 use crate::i18n::{self, fill, t};
+use crate::lab::Handle;
 use crate::miner::max_threads;
 use crate::screens::{Lcd, Screen, Screens};
 use crate::state::Shared;
@@ -37,10 +38,16 @@ pub struct NerdApp {
     settings_open: bool,
     draft: Config,
     last_tray_update: Instant,
+    /// `None` until the lab window is opened, and again once it is closed: the lab uses no
+    /// memory unless it is on screen.
+    lab: Option<Handle>,
+    /// Surface format, needed by the lab's studio renderer; a plain value, costs nothing.
+    lab_format: Option<eframe::wgpu::TextureFormat>,
 }
 
 impl NerdApp {
     pub fn new(cc: &eframe::CreationContext<'_>, shared: Arc<Shared>) -> Self {
+        Self::debug_rate_log(&shared);
         let (tx, tray_rx) = crossbeam_channel::unbounded();
         let ctx = cc.egui_ctx.clone();
         let tray = match Tray::new(move |cmd| {
@@ -55,7 +62,7 @@ impl NerdApp {
         };
         let cfg = shared.config.read().unwrap().clone();
         cc.egui_ctx.set_visuals(egui::Visuals::dark());
-        let app = NerdApp {
+        let mut app = NerdApp {
             visible: !cfg.start_hidden || tray.is_none(),
             draft: cfg.clone(),
             shared,
@@ -68,8 +75,13 @@ impl NerdApp {
             zoom: cfg.zoom.clamp(1.0, 3.0),
             settings_open: cfg.btc_address.trim().is_empty(),
             last_tray_update: Instant::now() - Duration::from_secs(10),
+            lab: None,
+            lab_format: cc.wgpu_render_state.as_ref().map(|s| s.target_format),
         };
         crate::screens::install_fonts(&cc.egui_ctx);
+        if std::env::var_os("NERDMINER_LAB").is_some() {
+            app.open_lab();
+        }
         cc.egui_ctx.send_viewport_cmd(ViewportCommand::InnerSize(app.window_size()));
         app
     }
@@ -83,6 +95,38 @@ impl NerdApp {
         }
         if let Some(tray) = &mut self.tray {
             tray.set_window_visible(v);
+        }
+    }
+
+    /// Debug: NERDMINER_RATE_LOG=1 prints the hashrate every 5 s, lab open or not.
+    fn debug_rate_log(shared: &Arc<Shared>) {
+        if std::env::var_os("NERDMINER_RATE_LOG").is_none() {
+            return;
+        }
+        let shared = shared.clone();
+        std::thread::spawn(move || loop {
+            std::thread::sleep(std::time::Duration::from_secs(5));
+            eprintln!("rate {:.0}", shared.hashrate());
+        });
+    }
+
+    fn open_lab(&mut self) {
+        if self.lab.is_none() {
+            self.lab = Some(crate::lab::open(&self.shared, self.lab_format));
+        }
+    }
+
+    /// Debug: NERDMINER_LAB_CYCLE=1 opens and closes the lab every 5 s, to check that closing
+    /// gives the memory back.
+    fn debug_lab_cycle(&mut self) {
+        let Ok(mode) = std::env::var("NERDMINER_LAB_CYCLE") else { return };
+        let secs = self.shared.started.elapsed().as_secs();
+        // "once" opens it a single time, to watch what memory does long after closing.
+        let open = if mode == "once" { (5..15).contains(&secs) } else { secs / 5 % 2 == 1 };
+        if open {
+            self.open_lab();
+        } else {
+            self.lab = None;
         }
     }
 
@@ -197,6 +241,7 @@ impl NerdApp {
                 }
                 self.persist_runtime();
             }
+            TrayCmd::OpenLab => self.open_lab(),
             TrayCmd::OpenPool => {
                 if let Some(u) = crate::tray::pool_url(&self.shared.config.read().unwrap()) {
                     crate::tray::open_url(&u);
@@ -322,6 +367,9 @@ impl NerdApp {
             let paused = self.shared.paused.load(Relaxed);
             if ui.small_button(if paused { t().btn_mine } else { t().btn_pause }).clicked() {
                 self.toggle_pause();
+            }
+            if ui.selectable_label(self.lab.is_some(), "🎓").on_hover_text(t().open_lab).clicked() {
+                self.open_lab();
             }
             if ui.selectable_label(self.settings_open, "⚙").on_hover_text(t().settings).clicked() {
                 let o = !self.settings_open;
@@ -482,6 +530,14 @@ impl eframe::App for NerdApp {
             self.handle_tray(ctx, cmd);
         }
         self.update_tray();
+        self.debug_lab_cycle();
+        // Deferred viewports stay open only while shown from every root pass.
+        if self.lab.as_ref().is_some_and(crate::lab::closed) {
+            self.lab = None;
+        }
+        if let Some(lab) = &self.lab {
+            crate::lab::show(ctx, &self.shared, lab);
+        }
         ctx.request_repaint_after(Duration::from_millis(500));
     }
 
