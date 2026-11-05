@@ -4,8 +4,7 @@ Ideias aprovadas ou propostas, sem data. Marque aqui o que entrar em uma versão
 
 ## Próximas
 
-- **Consumo de energia (estimativa em watts).** Mostrar no app quantos watts a mineração consome, estimados a partir do uso configurado de CPU/GPU e do modelo detectado. É uma estimativa: deixar isso claro na interface. No macOS não há leitura de potência sem privilégios; em Linux/Windows avaliar RAPL e contadores do fabricante antes de depender de tabela de TDP.
-- **FAQ de consumo no site: números de watts.** O FAQ já explica o que o app consome, que depende da configuração, e a conta do kWh. Falta incluir os números reais quando a estimativa acima existir.
+- **Consumo de energia (estimativa em watts).** Mostrar no app quantos watts a mineração consome, estimados a partir do uso configurado de CPU/GPU e do modelo detectado. É uma estimativa: deixar isso claro na interface. Decisão: partir do TDP anunciado (TDP × threads ÷ total × % de uso; GPU: TDP × %), sem precisão de medição. No macOS não há leitura de potência sem privilégios, e a Apple não publica TDP, então os chips Apple precisam de outro critério.
 - **Hashrate cortado nas telas.** A partir de 100 KH/s o primeiro dígito é cortado na caixa amarela.
 
 ## Depois

@@ -518,12 +518,33 @@ cargo run --release</pre>
       <details>
         <summary><span data-l="en">How much will it add to my power bill?</span><span data-l="pt">Quanto isso soma na conta de luz?</span></summary>
         <div class="a">
-          <p data-l="en">We can't give one number: it depends on your computer, your settings, how many hours you mine and your electricity rate. The app does not show watts yet; an estimate is planned.</p>
-          <p data-l="pt">Não dá para cravar um número: depende do seu computador, da configuração, de quantas horas você minera e da sua tarifa. O app ainda não mostra watts; uma estimativa está planejada.</p>
-          <p data-l="en">The math is: <b>extra watts × hours ÷ 1000 × price per kWh</b>. As an example of the math, not a measurement: 30 extra watts, 24 hours a day for 30 days, is 21.6 kWh. At $0.20 per kWh, that is $4.32 a month. A desktop with a dedicated GPU at full power can draw much more.</p>
-          <p data-l="pt">A conta é: <b>watts a mais × horas ÷ 1000 × preço do kWh</b>. Como exemplo da conta, não como medição: 30 watts a mais, 24 horas por dia durante 30 dias, dão 21,6 kWh. A R$ 1,00 o kWh, são R$ 21,60 por mês. Um desktop com GPU dedicada no máximo pode gastar bem mais.</p>
-          <p data-l="en">For a real number, plug the computer into a power meter and compare the reading with mining paused and running.</p>
-          <p data-l="pt">Para um número real, ligue o computador em um medidor de tomada e compare a leitura com a mineração pausada e rodando.</p>
+          <p data-l="en">It's only an estimate, because it depends on your computer, your settings and your electricity rate. The app doesn't show watts yet, so you can use the advertised TDP of your CPU or GPU:</p>
+          <p data-l="pt">Dá só para estimar, porque depende do seu computador, da configuração e da sua tarifa. O app ainda não mostra watts, então você pode usar o TDP anunciado da sua CPU ou GPU:</p>
+          <ul>
+            <li><span data-l="en"><b>CPU:</b> TDP × (threads used ÷ total threads) × % per thread</span><span data-l="pt"><b>CPU:</b> TDP × (threads usadas ÷ total de threads) × % por thread</span></li>
+            <li><span data-l="en"><b>GPU:</b> TDP × % of GPU</span><span data-l="pt"><b>GPU:</b> TDP × % da GPU</span></li>
+            <li><span data-l="en"><b>Cost:</b> watts × hours ÷ 1000 × price per kWh</span><span data-l="pt"><b>Custo:</b> watts × horas ÷ 1000 × preço do kWh</span></li>
+          </ul>
+          <div class="table-wrap" style="margin:16px 0">
+            <table>
+              <thead><tr>
+                <th><span data-l="en">Example, mining 24 h a day for 30 days</span><span data-l="pt">Exemplo, minerando 24 h por dia durante 30 dias</span></th>
+                <th class="n"><span data-l="en">Estimate</span><span data-l="pt">Estimativa</span></th>
+                <th class="n"><span data-l="en">Per month</span><span data-l="pt">Por mês</span></th>
+                <th class="n"><span data-l="en">At $0.20/kWh</span><span data-l="pt">A R$ 1,00/kWh</span></th>
+              </tr></thead>
+              <tbody>
+                <tr><td><span data-l="en">Ryzen 5 5600X (65 W, 12 threads): 4 threads @ 50%</span><span data-l="pt">Ryzen 5 5600X (65 W, 12 threads): 4 threads @ 50%</span></td><td class="n">~11 W</td><td class="n">~8 kWh</td><td class="n"><span data-l="en">~$1.60</span><span data-l="pt">~R$ 8</span></td></tr>
+                <tr><td><span data-l="en">Ryzen 5 5600X: 12 threads @ 100%</span><span data-l="pt">Ryzen 5 5600X: 12 threads @ 100%</span></td><td class="n">~65 W</td><td class="n">~47 kWh</td><td class="n"><span data-l="en">~$9.40</span><span data-l="pt">~R$ 47</span></td></tr>
+                <tr><td><span data-l="en">GeForce RTX 3060 (170 W): GPU @ 30%</span><span data-l="pt">GeForce RTX 3060 (170 W): GPU @ 30%</span></td><td class="n">~51 W</td><td class="n">~37 kWh</td><td class="n"><span data-l="en">~$7.30</span><span data-l="pt">~R$ 37</span></td></tr>
+                <tr><td><span data-l="en">GeForce RTX 3060: GPU @ 100%</span><span data-l="pt">GeForce RTX 3060: GPU @ 100%</span></td><td class="n">~170 W</td><td class="n">~122 kWh</td><td class="n"><span data-l="en">~$24.50</span><span data-l="pt">~R$ 122</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p data-l="en"><b>TDP is a reference, not a measurement.</b> Real consumption can be higher or lower, and these numbers leave out the rest of the computer, such as the screen. Rates are examples too. For a real number, plug the computer into a power meter and compare the reading with mining paused and running.</p>
+          <p data-l="pt"><b>TDP é uma referência, não uma medição.</b> O consumo real pode ser maior ou menor, e esses números deixam de fora o resto do computador, como a tela. As tarifas também são exemplos. Para um número real, ligue o computador em um medidor de tomada e compare a leitura com a mineração pausada e rodando.</p>
+          <p data-l="en"><b>Apple chips:</b> Apple doesn't publish TDP, so this math doesn't apply. In one quick test on a MacBook Air M1 with the default settings, CPU and GPU together stayed below 2 W.</p>
+          <p data-l="pt"><b>Chips da Apple:</b> a Apple não publica TDP, então esta conta não se aplica. Num teste rápido em um MacBook Air M1 com a configuração padrão, CPU e GPU juntas ficaram abaixo de 2 W.</p>
         </div>
       </details>
       <details>
